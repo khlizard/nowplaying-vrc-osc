@@ -21,6 +21,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        WindowIcon.TryApply(this);
         InitTray();
     }
 
@@ -45,6 +46,7 @@ public partial class MainWindow : Window
 
     private void ShowWindow()
     {
+        ShowInTaskbar = true;
         Show();
         WindowState = WindowState.Normal;
         Activate();
@@ -52,14 +54,26 @@ public partial class MainWindow : Window
 
     private async void ExitApp()
     {
+        if (_exiting) return;
         _exiting = true;
-        await StopAndDisposeBridgeAsync();
+
+        try
+        {
+            await StopAndDisposeBridgeAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[NowPlayingVrcOsc] Exit cleanup failed: {ex}");
+        }
+
         if (_trayIcon != null)
         {
             _trayIcon.Visible = false;
             _trayIcon.Dispose();
             _trayIcon = null;
         }
+
+        // Close() は Window_Closing から再入するとハング/例外になるため呼ばない
         Application.Current.Shutdown();
     }
 
@@ -158,12 +172,19 @@ public partial class MainWindow : Window
         }
     }
 
-    // --- 閉じる → トレイ格納 ---------------------------------------------
+    // --- 最小化 → トレイ / × → 終了 ------------------------------------
+
+    private void Window_StateChanged(object sender, EventArgs e)
+    {
+        if (_exiting || WindowState != WindowState.Minimized) return;
+        Hide();
+        ShowInTaskbar = false;
+    }
 
     private void Window_Closing(object sender, CancelEventArgs e)
     {
         if (_exiting) return;
         e.Cancel = true;
-        Hide();
+        ExitApp();
     }
 }

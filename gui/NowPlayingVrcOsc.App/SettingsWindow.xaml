@@ -5,7 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="設定 — Now Playing → VRChat" Height="500" Width="560"
-        Icon="/Assets/app.ico"
         ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
     <Grid Margin="14">
         <Grid.ColumnDefinitions>

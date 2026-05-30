@@ -104,11 +104,9 @@ public sealed class SocketIoTrackSource : ITrackSource
 
     public async ValueTask DisposeAsync()
     {
-        if (_client != null)
-        {
-            try { await _client.DisconnectAsync(); } catch { }
-            _client.Dispose();
-            _client = null;
-        }
+        if (_client == null) return;
+        try { await _client.DisconnectAsync(); } catch { }
+        _client.Dispose();
+        _client = null;
     }
 }

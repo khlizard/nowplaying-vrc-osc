@@ -16,6 +16,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(AppSettings current)
     {
         InitializeComponent();
+        WindowIcon.TryApply(this);
         Result = current;
         LoadFields(current);
     }

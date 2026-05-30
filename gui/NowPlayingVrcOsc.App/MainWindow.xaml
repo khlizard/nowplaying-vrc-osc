@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Now Playing → VRChat" Height="250" Width="540"
-        Icon="/Assets/app.ico"
         ResizeMode="CanMinimize"
+        StateChanged="Window_StateChanged"
         Closing="Window_Closing">
     <Grid Margin="16">
         <Grid.RowDefinitions>

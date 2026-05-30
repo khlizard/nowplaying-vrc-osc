@@ -142,7 +142,18 @@ if (Test-Path -LiteralPath $PackageDir) {
 }
 New-Item -ItemType Directory -Path $PackageDir -Force | Out-Null
 
-Copy-Item -Path (Join-Path $PublishDir '*') -Destination $PackageDir -Recurse -Force
+$publishedExe = Join-Path $PublishDir $ExeName
+if (-not (Test-Path -LiteralPath $publishedExe)) {
+    throw "publish 出力の exe が見つかりません: $publishedExe"
+}
+
+if ($Format -eq 'Single') {
+    # 単一 exe: dotnet publish が空の Assets/ 等を残すことがあるため exe のみ同梱
+    Copy-Item -LiteralPath $publishedExe -Destination $PackageDir -Force
+}
+else {
+    Copy-Item -Path (Join-Path $PublishDir '*') -Destination $PackageDir -Recurse -Force
+}
 
 $readmeTemplate = Join-Path $ReleaseDir 'README.ja.txt'
 $noticesTemplate = Join-Path $ReleaseDir 'THIRD-PARTY-NOTICES.txt'
