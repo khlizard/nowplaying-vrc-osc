@@ -1,0 +1,79 @@
+# Now Playing → VRChat (GUI 版)
+
+[Now Playing App 2 (NP2)](../README.md) の再生中の曲を取得し、VRChat Chatbox へ
+OSC で送る Windows 常駐 GUI アプリです。Python CLI 版
+[`nowplaying-vrc-osc.py`](../nowplaying-vrc-osc.py) を移植したもので、同じ取得・
+フォーマット・送信ルールに従います（詳細は
+[`docs/nowplaying-vrc-osc-gui/plan.ja.md`](../docs/nowplaying-vrc-osc-gui/plan.ja.md)）。
+
+## 構成
+
+| プロジェクト | TFM | 役割 |
+|---|---|---|
+| `NowPlayingVrcOsc.Core` | `net10.0` | config.json 監視 / フォーマット / 重複抑制 / OSC 送信 |
+| `NowPlayingVrcOsc.App` | `net10.0-windows` (WPF) | トレイ常駐 + ウィンドウ + 設定 UI |
+
+## ビルド・実行
+
+アイコン (`Assets/app.ico`) は `docs/icon1024.png` から生成します。初回または
+PNG を更新したとき:
+
+```powershell
+.\gui\scripts\generate-app-icon.ps1
+```
+
+```powershell
+cd gui
+dotnet build NowPlayingVrcOsc.slnx
+dotnet run --project NowPlayingVrcOsc.App
+```
+
+.NET 10 SDK が必要です。
+
+## 使い方
+
+1. NP2 を起動して曲を再生する。
+2. 本アプリを起動し、**［開始］** を押すと `config.json` の監視が始まる。
+3. 曲が **切り替わった** タイミングで VRChat Chatbox に送信される。
+   （起動時に再生中の曲は送信しない＝ Python 版と同じ挙動）
+4. **［テスト送信］** で VRChat への疎通を確認できる。
+5. **［設定...］** で取得方式・OSC 送信先・表示オプションを変更できる。
+
+ウィンドウの **× で閉じるとトレイに格納** されます。完全に終了するには
+トレイアイコン右クリック →「終了」。
+
+## 設定
+
+GUI の **［設定...］** から変更でき、内容は次に保存されます:
+
+```
+%AppData%\NowPlayingVrcOsc\settings.json
+```
+
+| 設定 | 既定 | 説明 |
+|---|---|---|
+| Source | `auto` | `auto` / `config` / `socketio`（現状 config.json 監視を実装） |
+| ConfigPath | `%USERPROFILE%\.nowplaying\config.json` | NP2 の config.json |
+| PollIntervalSeconds | `0.5` | 監視ポーリング間隔（秒） |
+| VrcHost | `127.0.0.1` | OSC 送信先ホスト |
+| VrcPort | `9000` | OSC 送信先ポート |
+| ChatboxNotification | `false` | `/chatbox/input` の通知音 |
+| ChatboxIndicator | `false` | `/chatbox/typing` インジケーター |
+| ShowLabel | `false` | label フィールドの `[～]` 表示 |
+| StripTitleBrackets | `true` | 曲名内の `[～]` を除去 |
+
+## Python 版との挙動一致（parity）
+
+- 取得: `config.json` の `currentTrack` を mtime ポーリング
+- 起動時の現在曲は送信しない（初回は baseline 記録のみ）
+- 重複抑制: `currentTrack.id` 優先（無ければ `title`）
+- フォーマット: `Title - Artist`（アーティスト不明時は曲名のみ）
+- Chatbox 文言: `🎵` + 空白 + フォーマット結果
+- OSC: `/chatbox/input [text, true, notification]`、`/chatbox/typing [bool]`
+
+## 未実装 / 今後 (Phase 4)
+
+- Socket.IO フォールバック（`socketio` / `auto` の副経路）
+- 送信ログウィンドウ
+- 起動時トレイ最小化・Windows スタートアップ登録
+- `PublishSingleFile` による単一 exe 配布

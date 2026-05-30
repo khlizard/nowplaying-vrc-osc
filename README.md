@@ -107,6 +107,8 @@ python nowplaying-vrc-osc.py --help
 | パス | 内容 |
 |---|---|
 | [`docs/now-playing-app/external-connection.ja.md`](docs/now-playing-app/external-connection.ja.md) | NP2 への外部接続（ファイル監視 / Socket.IO API） |
+| [`docs/nowplaying-vrc-osc-gui/plan.ja.md`](docs/nowplaying-vrc-osc-gui/plan.ja.md) | **C# Windows GUI 版 開発計画** |
+| [`CLAUDE.md`](CLAUDE.md) | Claude Code 向け作業指示（計画書参照） |
 | [`docs/vrc_osc_ja/`](docs/vrc_osc_ja/) | VRChat OSC ドキュメント（日本語） |
 | [`docs/vrc_osc/`](docs/vrc_osc/) | VRChat OSC ドキュメント（英語原文） |
 

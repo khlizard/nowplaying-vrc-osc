@@ -1,0 +1,28 @@
+<Window x:Class="NowPlayingVrcOsc.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Now Playing → VRChat" Height="250" Width="540"
+        Icon="/Assets/app.ico"
+        ResizeMode="CanMinimize"
+        Closing="Window_Closing">
+    <StackPanel Margin="14">
+        <TextBlock Text="状態:" FontWeight="Bold"/>
+        <TextBlock x:Name="StatusText" Text="停止中" Margin="0,2,0,10"/>
+
+        <TextBlock Text="現在の曲:" FontWeight="Bold"/>
+        <TextBlock x:Name="CurrentTrackText" Text="—" TextWrapping="Wrap" Margin="0,2,0,10"/>
+
+        <TextBlock Text="最終送信:" FontWeight="Bold"/>
+        <TextBlock x:Name="LastSentText" Text="—" TextWrapping="Wrap" Margin="0,2,0,14"/>
+
+        <StackPanel Orientation="Horizontal">
+            <Button x:Name="StartButton"    Content="開始"       Width="80" Margin="0,0,8,0" Click="StartButton_Click"/>
+            <Button x:Name="StopButton"     Content="停止"       Width="80" Margin="0,0,8,0" IsEnabled="False" Click="StopButton_Click"/>
+            <Button x:Name="TestSendButton" Content="テスト送信" Width="90" Margin="0,0,8,0" Click="TestSendButton_Click"/>
+            <Button x:Name="SettingsButton" Content="設定..."    Width="80" Click="SettingsButton_Click"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

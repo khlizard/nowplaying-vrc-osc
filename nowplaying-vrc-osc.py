@@ -412,7 +412,7 @@ def run_bridge(
     osc = udp_client.SimpleUDPClient(vrc_host, vrc_port)
 
     def on_track(track: dict) -> None:
-        text = f"🎵                         {format_track(track, show_label, strip_title_brackets)}"
+        text = f"🎵 {format_track(track, show_label, strip_title_brackets)}"
         print(text)
         send_chatbox(osc, text, notification, indicator)
 

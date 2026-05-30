@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="NowPlayingVrcOsc.App/NowPlayingVrcOsc.App.csproj" />
+  <Project Path="NowPlayingVrcOsc.Core/NowPlayingVrcOsc.Core.csproj" />
+</Solution>

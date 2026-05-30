@@ -1,0 +1,8 @@
+# .NET ビルド成果物
+bin/
+obj/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
