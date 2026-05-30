@@ -4,7 +4,6 @@ import os
 import re
 import sys
 import time
-import uuid
 from pathlib import Path
 
 import socketio
@@ -253,13 +252,20 @@ def format_track(
     return " ".join(parts).strip()
 
 
-def make_track_handler(on_track, last_key: dict | None = None):
+def make_track_handler(on_track, last_key: dict | None = None, skip_initial: bool = True):
     if last_key is None:
         last_key = {"value": None}
+    initial_seen = {"value": not skip_initial}
 
     def handle_track(track: dict) -> None:
         key = track_key(track)
-        if not key or key == last_key["value"]:
+        if not key:
+            return
+        if not initial_seen["value"]:
+            initial_seen["value"] = True
+            last_key["value"] = key
+            return
+        if key == last_key["value"]:
             return
         last_key["value"] = key
         on_track(track)
@@ -330,31 +336,13 @@ def run_config_watcher(
 
 def run_np_listener(np_url: str, on_track, last_key: dict | None = None) -> None:
     sio = socketio.Client()
-    handle_track = make_track_handler(on_track, last_key)
+    skip_initial = last_key is None or last_key.get("value") is None
+    handle_track = make_track_handler(on_track, last_key, skip_initial=skip_initial)
 
     @sio.on("connect")
     def on_connect() -> None:
         print(f"NP2 に接続しました ({np_url})")
         sio.emit("id", DEFAULT_SERVICE)
-
-        response_id = str(uuid.uuid4())
-
-        def on_current_track(response: dict) -> None:
-            track = response.get("result")
-            if track:
-                handle_track(track)
-
-        sio.on(response_id)(on_current_track)
-        sio.emit(
-            "service-call",
-            {
-                "from": DEFAULT_SERVICE,
-                "to": "NowPlayingHistory",
-                "fn": "getCurrentTrack",
-                "args": [],
-                "responseId": response_id,
-            },
-        )
 
     @sio.on("trackUpdate")
     def on_track_update(data: dict) -> None:
@@ -424,7 +412,7 @@ def run_bridge(
     osc = udp_client.SimpleUDPClient(vrc_host, vrc_port)
 
     def on_track(track: dict) -> None:
-        text = f"🎵 Now Playing: {format_track(track, show_label, strip_title_brackets)}"
+        text = f"🎵                         {format_track(track, show_label, strip_title_brackets)}"
         print(text)
         send_chatbox(osc, text, notification, indicator)
 
