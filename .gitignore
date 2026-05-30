@@ -6,7 +6,6 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/          # Python wheel / GUI release ZIP 出力
 downloads/
 eggs/
 .eggs/
@@ -88,3 +87,8 @@ dmypy.json
 # Local overrides (ports, paths, etc.)
 config.local.*
 *.local.json
+
+# GUI / Python 配布物（publish-release.ps1 等の出力 — コミットしない）
+dist/
+*.exe
+*.zip
