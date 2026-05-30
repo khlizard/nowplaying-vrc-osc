@@ -71,6 +71,9 @@ public partial class MainWindow : Window
         var bridge = new BridgeService(_settings);
         _bridge = bridge;
 
+        _bridge.StatusChanged += s =>
+            Dispatcher.Invoke(() => StatusText.Text = s);
+
         _bridge.TrackChanged += track =>
             Dispatcher.Invoke(() =>
                 CurrentTrackText.Text = TrackFormatter.FormatTrack(
@@ -82,13 +85,14 @@ public partial class MainWindow : Window
 
         StartButton.IsEnabled = false;
         StopButton.IsEnabled = true;
-        StatusText.Text = "監視中 (config.json)";
+        StatusText.Text = "接続中…";
 
         _ = bridge.StartAsync().ContinueWith(_ =>
             Dispatcher.Invoke(() =>
             {
                 // 別の bridge に差し替え済み（再起動 / 手動停止）なら UI を触らない
                 if (_exiting || !ReferenceEquals(_bridge, bridge)) return;
+                _bridge = null;
                 StatusText.Text = "停止中";
                 StartButton.IsEnabled = true;
                 StopButton.IsEnabled = false;
@@ -132,8 +136,8 @@ public partial class MainWindow : Window
 
         _settings = dlg.Result;
 
-        // 監視中なら新しい設定で再起動して即反映
-        if (_bridge != null)
+        // 監視中（IsRunning）なら設定を即反映するために再接続
+        if (_bridge?.IsRunning == true)
         {
             _bridge.Stop();
             _bridge = null;

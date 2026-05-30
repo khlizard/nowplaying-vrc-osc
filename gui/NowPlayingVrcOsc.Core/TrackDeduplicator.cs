@@ -32,6 +32,18 @@ public class TrackDeduplicator
         _initialSeen = false;
     }
 
+    /// <summary>
+    /// 既知のベースライン曲で初期化する。
+    /// Socket.IO ソース用：接続時に NP2 が現在曲を push しないため、
+    /// config.json の currentTrack を先行シードして初回スキップを無効化する。
+    /// knownCurrent が null の場合も _initialSeen=true にして初回スキップを無効化。
+    /// </summary>
+    public void Seed(TrackInfo? knownCurrent)
+    {
+        _initialSeen = true;
+        _lastKey = knownCurrent != null ? TrackKey(knownCurrent) : null;
+    }
+
     private static string TrackKey(TrackInfo track) =>
         !string.IsNullOrEmpty(track.Id) ? track.Id : (track.Title ?? "");
 }

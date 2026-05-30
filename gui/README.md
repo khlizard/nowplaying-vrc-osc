@@ -52,7 +52,7 @@ GUI の **［設定...］** から変更でき、内容は次に保存されま�
 
 | 設定 | 既定 | 説明 |
 |---|---|---|
-| Source | `auto` | `auto` / `config` / `socketio`（現状 config.json 監視を実装） |
+| Source | `auto` | `auto`（config 優先→Socket.IO フォールバック） / `config` / `socketio` |
 | ConfigPath | `%USERPROFILE%\.nowplaying\config.json` | NP2 の config.json |
 | PollIntervalSeconds | `0.5` | 監視ポーリング間隔（秒） |
 | NpUrl | （空） | Socket.IO 接続先 URL。空欄なら config.json の `localSocketPort` から自動検出（例: `http://localhost:29000`）。未検出時は `http://localhost:9000` |
@@ -72,9 +72,8 @@ GUI の **［設定...］** から変更でき、内容は次に保存されま�
 - Chatbox 文言: `🎵` + 空白 + フォーマット結果
 - OSC: `/chatbox/input [text, true, notification]`、`/chatbox/typing [bool]`
 
-## 未実装 / 今後 (Phase 4)
+## 今後の予定
 
-- Socket.IO フォールバック（`socketio` / `auto` の副経路）
 - 送信ログウィンドウ
 - 起動時トレイ最小化・Windows スタートアップ登録
 - `PublishSingleFile` による単一 exe 配布

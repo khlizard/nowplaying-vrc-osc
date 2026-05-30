@@ -32,6 +32,38 @@ public static class NpConfig
     }
 
     /// <summary>
+    /// config.json の currentTrack を読む（無い・読めない場合は null）。
+    /// 機密保護のため currentTrack のみ参照する。
+    /// </summary>
+    public static TrackInfo? ReadCurrentTrack(string configPath)
+    {
+        try
+        {
+            if (!File.Exists(configPath)) return null;
+            var json = File.ReadAllText(configPath, Encoding.UTF8);
+            using var doc = JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty("currentTrack", out var el)) return null;
+            if (el.ValueKind != JsonValueKind.Object) return null;
+            var title = GetString(el, "title");
+            if (string.IsNullOrEmpty(title)) return null;
+            return new TrackInfo(
+                Id: GetString(el, "id"),
+                Title: title,
+                Artist: GetString(el, "artist"),
+                Label: GetString(el, "label")
+            );
+        }
+        catch { return null; }
+    }
+
+    private static string? GetString(JsonElement el, string property)
+    {
+        if (el.TryGetProperty(property, out var val) && val.ValueKind == JsonValueKind.String)
+            return val.GetString();
+        return null;
+    }
+
+    /// <summary>
     /// Socket.IO 接続先 URL を解決する。優先順位: 明示指定 &gt; config の localSocketPort &gt; 既定。
     /// </summary>
     public static string ResolveNpUrl(string? explicitUrl, string configPath)
