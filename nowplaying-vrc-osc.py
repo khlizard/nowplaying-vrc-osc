@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import re
 import sys
 import time
 import uuid
@@ -18,6 +19,18 @@ DEFAULT_SOURCE = "auto"
 DEFAULT_POLL_INTERVAL = 0.5
 DEFAULT_CHATBOX_NOTIFICATION = False
 DEFAULT_CHATBOX_INDICATOR = False
+DEFAULT_SHOW_LABEL = False
+DEFAULT_STRIP_TITLE_BRACKETS = True
+
+TITLE_BRACKETS_RE = re.compile(r"\s*\[[^\]]*\]")
+
+
+def load_env_file() -> None:
+    try:
+        from dotenv import load_dotenv
+    except ImportError:
+        return
+    load_dotenv()
 
 
 def env_bool(name: str, default: bool) -> bool:
@@ -112,9 +125,39 @@ def parse_args() -> argparse.Namespace:
         action="store_false",
         help="入力中インジケーターを表示しない",
     )
+    label = parser.add_mutually_exclusive_group()
+    label.add_argument(
+        "--show-label",
+        dest="show_label",
+        action="store_true",
+        help="label フィールドの [～] を表示する",
+    )
+    label.add_argument(
+        "--no-show-label",
+        dest="show_label",
+        action="store_false",
+        help="label フィールドの [～] を表示しない（既定）",
+    )
+    title_brackets = parser.add_mutually_exclusive_group()
+    title_brackets.add_argument(
+        "--strip-title-brackets",
+        dest="strip_title_brackets",
+        action="store_true",
+        help="曲名（title）内の [～] を除去する",
+    )
+    title_brackets.add_argument(
+        "--no-strip-title-brackets",
+        dest="strip_title_brackets",
+        action="store_false",
+        help="曲名（title）内の [～] を残す",
+    )
     parser.set_defaults(
         notification=env_bool("VRC_CHATBOX_NOTIFICATION", DEFAULT_CHATBOX_NOTIFICATION),
         indicator=env_bool("VRC_CHATBOX_INDICATOR", DEFAULT_CHATBOX_INDICATOR),
+        show_label=env_bool("NP_SHOW_LABEL", DEFAULT_SHOW_LABEL),
+        strip_title_brackets=env_bool(
+            "NP_STRIP_TITLE_BRACKETS", DEFAULT_STRIP_TITLE_BRACKETS
+        ),
     )
     return parser.parse_args()
 
@@ -172,14 +215,42 @@ def track_key(track: dict) -> str:
     return track.get("title", "")
 
 
-def format_track(track: dict) -> str:
-    title = track.get("title", "")
-    artist = track.get("artist", "")
-    label = track.get("label", "")
-    parts = [f"{artist} - {title}".strip(" -")]
-    if label:
+def remove_brackets(text: str) -> str:
+    return TITLE_BRACKETS_RE.sub("", text).strip()
+
+
+def normalize_field(value: object) -> str:
+    if value is None:
+        return ""
+    text = str(value).strip()
+    if not text or text.lower() in ("none", "unknown", "n/a", "?"):
+        return ""
+    return text
+
+
+def format_track(
+    track: dict,
+    show_label: bool = DEFAULT_SHOW_LABEL,
+    strip_title_brackets: bool = DEFAULT_STRIP_TITLE_BRACKETS,
+) -> str:
+    title = normalize_field(track.get("title"))
+    if strip_title_brackets and title:
+        title = remove_brackets(title)
+    artist = normalize_field(track.get("artist"))
+    label = normalize_field(track.get("label"))
+
+    if title and artist:
+        parts = [f"{title} - {artist}"]
+    elif title:
+        parts = [title]
+    elif artist:
+        parts = [artist]
+    else:
+        parts = [""]
+
+    if label and show_label:
         parts.append(f"[{label}]")
-    return " ".join(parts)
+    return " ".join(parts).strip()
 
 
 def make_track_handler(on_track, last_key: dict | None = None):
@@ -329,9 +400,11 @@ def run_receive_only(
     config_path: Path,
     poll_interval: float,
     np_url: str,
+    show_label: bool,
+    strip_title_brackets: bool,
 ) -> None:
     def on_track(track: dict) -> None:
-        print(format_track(track))
+        print(format_track(track, show_label, strip_title_brackets))
 
     run_track_source(source, config_path, poll_interval, np_url, on_track)
 
@@ -345,11 +418,13 @@ def run_bridge(
     vrc_port: int,
     notification: bool,
     indicator: bool,
+    show_label: bool,
+    strip_title_brackets: bool,
 ) -> None:
     osc = udp_client.SimpleUDPClient(vrc_host, vrc_port)
 
     def on_track(track: dict) -> None:
-        text = f"🎵 Now Playing: {format_track(track)}"
+        text = f"🎵 Now Playing: {format_track(track, show_label, strip_title_brackets)}"
         print(text)
         send_chatbox(osc, text, notification, indicator)
 
@@ -357,6 +432,7 @@ def run_bridge(
 
 
 def main() -> None:
+    load_env_file()
     args = parse_args()
     config_path = resolve_config_path(args.np_config_path)
     np_url = resolve_np_url(args.np_url, config_path)
@@ -372,7 +448,14 @@ def main() -> None:
         return
 
     if args.receive_only:
-        run_receive_only(args.source, config_path, args.poll_interval, np_url)
+        run_receive_only(
+            args.source,
+            config_path,
+            args.poll_interval,
+            np_url,
+            args.show_label,
+            args.strip_title_brackets,
+        )
         return
 
     run_bridge(
@@ -384,6 +467,8 @@ def main() -> None:
         args.vrc_port,
         args.notification,
         args.indicator,
+        args.show_label,
+        args.strip_title_brackets,
     )
 
 

@@ -17,7 +17,7 @@ Now Playing App 2
                                     VRChat (OSC UDP)
 ```
 
-DJ ソフト（RekordBox、Serato、Traktor、Pro DJ Link 等）から NP2 が取得した曲名・アーティスト名を、VRC のチャットボックスに `🎵 Now Playing: Artist - Title` 形式で送ります。同じ曲が続く間は再送信しません（`currentTrack.id` で判定）。
+DJ ソフト（RekordBox、Serato、Traktor、Pro DJ Link 等）から NP2 が取得した曲名・アーティスト名を、VRC のチャットボックスに `🎵 Now Playing: Title - Artist` 形式で送ります（アーティスト不明時は曲名のみ）。同じ曲が続く間は再送信しません（`currentTrack.id` で判定）。
 
 ## 必要環境
 
@@ -43,6 +43,8 @@ pip install -r requirements.txt
 | `NP_URL` | config から自動 → `http://localhost:9000` | Socket.IO URL（フォールバック時） |
 | `VRC_OSC_HOST` | `127.0.0.1` | VRChat OSC 送信先 |
 | `VRC_OSC_PORT` | `9000` | VRChat OSC 受信ポート |
+| `NP_SHOW_LABEL` | `false` | `label` フィールドの `[～]` を表示（`true` のときのみ） |
+| `NP_STRIP_TITLE_BRACKETS` | `true` | 曲名（`title`）内の `[～]` を除去 |
 
 NP2 の Socket.IO ポートは `config.json` の `localSocketPort`、またはアプリ UI / `GET /config` で確認できます。
 
@@ -97,6 +99,8 @@ python nowplaying-vrc-osc.py --help
 | `--np-url` | Socket.IO URL |
 | `--vrc-host` | VRChat OSC ホスト |
 | `--vrc-port` | VRChat OSC ポート |
+| `--show-label` / `--no-show-label` | `label` フィールドの `[～]` 表示 / 非表示（既定: 非表示） |
+| `--strip-title-brackets` / `--no-strip-title-brackets` | 曲名内の `[～]` 除去 / 残す |
 
 ## ドキュメント
 
