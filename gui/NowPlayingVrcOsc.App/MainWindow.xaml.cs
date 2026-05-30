@@ -49,10 +49,10 @@ public partial class MainWindow : Window
         Activate();
     }
 
-    private void ExitApp()
+    private async void ExitApp()
     {
         _exiting = true;
-        _bridge?.Stop();
+        await StopAndDisposeBridgeAsync();
         if (_trayIcon != null)
         {
             _trayIcon.Visible = false;
@@ -99,10 +99,9 @@ public partial class MainWindow : Window
             }));
     }
 
-    private void StopButton_Click(object sender, RoutedEventArgs e)
+    private async void StopButton_Click(object sender, RoutedEventArgs e)
     {
-        _bridge?.Stop();
-        _bridge = null;
+        await StopAndDisposeBridgeAsync();
         StatusText.Text = "停止中";
         StartButton.IsEnabled = true;
         StopButton.IsEnabled = false;
@@ -129,7 +128,7 @@ public partial class MainWindow : Window
 
     // --- 設定 -------------------------------------------------------------
 
-    private void SettingsButton_Click(object sender, RoutedEventArgs e)
+    private async void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new SettingsWindow(_settings) { Owner = this };
         if (dlg.ShowDialog() != true) return;
@@ -139,10 +138,19 @@ public partial class MainWindow : Window
         // 監視中（IsRunning）なら設定を即反映するために再接続
         if (_bridge?.IsRunning == true)
         {
-            _bridge.Stop();
-            _bridge = null;
+            await StopAndDisposeBridgeAsync();
             StartBridge();
         }
+    }
+
+    private async Task StopAndDisposeBridgeAsync()
+    {
+        var bridge = _bridge;
+        _bridge = null;
+        if (bridge == null) return;
+
+        bridge.Stop();
+        try { await bridge.DisposeAsync(); } catch { }
     }
 
     // --- 閉じる → トレイ格納 ---------------------------------------------

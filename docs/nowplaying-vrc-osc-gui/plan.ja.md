@@ -95,7 +95,7 @@ Now Playing App 2
 **Chatbox 送信テキスト（意図した形式）**
 
 ```
-🎵 Now Playing: {format_track の結果}
+🎵 {format_track の結果}
 ```
 
 ### 2.5 VRChat OSC 送信

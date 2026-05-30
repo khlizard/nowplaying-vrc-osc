@@ -11,7 +11,7 @@ internal sealed class OscSender : IDisposable
 
     public OscSender(string host, int port)
     {
-        _endpoint = new IPEndPoint(IPAddress.Parse(host), port);
+        _endpoint = new IPEndPoint(ResolveAddress(host), port);
     }
 
     public void Send(string address, params object[] args)
@@ -66,6 +66,19 @@ internal sealed class OscSender : IDisposable
         var result = new byte[paddedLen]; // zero-initialized = null padding
         raw.CopyTo(result, 0);
         return result;
+    }
+
+    private static IPAddress ResolveAddress(string host)
+    {
+        if (IPAddress.TryParse(host, out var ipAddress))
+            return ipAddress;
+
+        var addresses = Dns.GetHostAddresses(host);
+        var ipv4 = Array.Find(addresses, a => a.AddressFamily == AddressFamily.InterNetwork);
+        if (ipv4 != null) return ipv4;
+        if (addresses.Length > 0) return addresses[0];
+
+        throw new SocketException((int)SocketError.HostNotFound);
     }
 
     public void Dispose() => _udp.Dispose();

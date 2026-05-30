@@ -4,6 +4,7 @@ public sealed class BridgeService : IAsyncDisposable
 {
     private readonly AppSettings _settings;
     private readonly TrackDeduplicator _deduplicator = new();
+    private readonly Action<string> _coordinatorStatusChangedHandler;
     private CancellationTokenSource? _cts;
     private VrcChatboxSender? _sender;
     private TrackSourceCoordinator? _coordinator;
@@ -15,11 +16,16 @@ public sealed class BridgeService : IAsyncDisposable
 
     public bool IsRunning => _cts != null && !_cts.IsCancellationRequested;
 
-    public BridgeService(AppSettings settings) => _settings = settings;
-
-    public Task StartAsync()
+    public BridgeService(AppSettings settings)
     {
-        if (IsRunning) return Task.CompletedTask;
+        _settings = settings;
+        _coordinatorStatusChangedHandler = s => StatusChanged?.Invoke(s);
+    }
+
+    public async Task StartAsync()
+    {
+        if (IsRunning) return;
+        await DisposeCoordinatorAsync().ConfigureAwait(false);
 
         _deduplicator.Reset();
 
@@ -38,10 +44,10 @@ public sealed class BridgeService : IAsyncDisposable
 
         var coordinator = new TrackSourceCoordinator(_settings);
         coordinator.TrackReceived += OnTrackReceived;
-        coordinator.StatusChanged  += s => StatusChanged?.Invoke(s);
+        coordinator.StatusChanged += _coordinatorStatusChangedHandler;
         _coordinator = coordinator;
 
-        return coordinator.StartAsync(_cts.Token);
+        await coordinator.StartAsync(_cts.Token).ConfigureAwait(false);
     }
 
     private void OnTrackReceived(TrackInfo track)
@@ -67,10 +73,17 @@ public sealed class BridgeService : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         Stop();
-        if (_coordinator != null)
-        {
-            await _coordinator.DisposeAsync().ConfigureAwait(false);
-            _coordinator = null;
-        }
+        await DisposeCoordinatorAsync().ConfigureAwait(false);
+    }
+
+    private async ValueTask DisposeCoordinatorAsync()
+    {
+        var coordinator = _coordinator;
+        _coordinator = null;
+        if (coordinator == null) return;
+
+        coordinator.TrackReceived -= OnTrackReceived;
+        coordinator.StatusChanged -= _coordinatorStatusChangedHandler;
+        await coordinator.DisposeAsync().ConfigureAwait(false);
     }
 }
