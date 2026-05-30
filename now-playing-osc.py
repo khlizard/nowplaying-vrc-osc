@@ -1,32 +1,65 @@
-import asyncio
-import json
-import websockets
+import socketio
+import uuid
 from pythonosc import udp_client
 
-# Now Playing App WebSocketポート（アプリ下部で確認）
-NP_WS_URL = "ws://localhost:9000"
+# Now Playing App 2（Socket.IO）— ポートはアプリ UI または GET /config で確認
+NP_URL = "http://localhost:9000"
+SERVICE = "NowPlayingTrackReceivers"
 
 # VRChat OSC
 osc = udp_client.SimpleUDPClient("127.0.0.1", 9000)
 
 last_title = None
+sio = socketio.Client()
 
-async def watch_and_send():
+
+def send_to_vrc(track: dict) -> None:
     global last_title
-    async with websockets.connect(NP_WS_URL) as ws:
-        print("接続完了")
-        async for message in ws:
-            data = json.loads(message)
-            title  = data.get("title", "")
-            artist = data.get("artist", "")
+    title = track.get("title", "")
+    artist = track.get("artist", "")
+    if not title or title == last_title:
+        return
+    last_title = title
+    text = f"🎵 Now Playing: {artist} - {title}"
+    print(text)
+    osc.send_message("/chatbox/input", [text, True, False])
 
-            # 曲変化時のみ送信（同じ曲を繰り返し送らない）
-            if title and title != last_title:
-                last_title = title
-                text = f"🎵 Now Playing: {artist} - {title}"
-                print(text)
 
-                # VRChat Chatboxへ送信
-                osc.send_message("/chatbox/input", [text, True, False])
+@sio.on("connect")
+def on_connect() -> None:
+    print("NP2 に接続しました")
+    sio.emit("id", SERVICE)
 
-asyncio.run(watch_and_send())
+    response_id = str(uuid.uuid4())
+
+    def on_current_track(response: dict) -> None:
+        track = response.get("result")
+        if track:
+            send_to_vrc(track)
+
+    sio.on(response_id)(on_current_track)
+
+    sio.emit(
+        "service-call",
+        {
+            "from": SERVICE,
+            "to": "NowPlayingHistory",
+            "fn": "getCurrentTrack",
+            "args": [],
+            "responseId": response_id,
+        },
+    )
+
+
+@sio.on("trackUpdate")
+def on_track_update(data: dict) -> None:
+    send_to_vrc(data["args"][0])
+
+
+@sio.on("animate")
+def on_animate(data: dict) -> None:
+    send_to_vrc(data["args"][0])
+
+
+sio.connect(NP_URL)
+sio.wait()
