@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="設定 — Now Playing → VRChat" Height="430" Width="560"
+        Title="設定 — Now Playing → VRChat" Height="500" Width="560"
         Icon="/Assets/app.ico"
         ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
     <Grid Margin="14">
@@ -13,6 +13,8 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -39,29 +41,35 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0" x:Name="ConfigPathBox" VerticalAlignment="Center"/>
+            <TextBox Grid.Column="0" x:Name="ConfigPathBox" VerticalAlignment="Center" TextChanged="ConfigPathBox_TextChanged"/>
             <Button  Grid.Column="1" Content="参照..." Width="64" Margin="6,0,0,0" Click="Browse_Click"/>
         </Grid>
 
         <TextBlock Grid.Row="2" Grid.Column="0" Text="ポーリング間隔 (秒)" VerticalAlignment="Center" Margin="0,6"/>
         <TextBox   Grid.Row="2" Grid.Column="1" x:Name="PollBox" Margin="0,6" Width="120" HorizontalAlignment="Left"/>
 
-        <TextBlock Grid.Row="3" Grid.Column="0" Text="VRChat ホスト" VerticalAlignment="Center" Margin="0,6"/>
-        <TextBox   Grid.Row="3" Grid.Column="1" x:Name="HostBox" Margin="0,6" Width="200" HorizontalAlignment="Left"/>
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Socket.IO URL" VerticalAlignment="Center" Margin="0,6"/>
+        <TextBox   Grid.Row="3" Grid.Column="1" x:Name="NpUrlBox" Margin="0,6" VerticalAlignment="Center"/>
+        <TextBlock Grid.Row="4" Grid.Column="1" x:Name="NpUrlHint" Foreground="Gray" FontSize="11"
+                   TextWrapping="Wrap" Margin="0,0,0,4"
+                   Text="空欄 = config.json の localSocketPort から自動検出"/>
 
-        <TextBlock Grid.Row="4" Grid.Column="0" Text="VRChat ポート" VerticalAlignment="Center" Margin="0,6"/>
-        <TextBox   Grid.Row="4" Grid.Column="1" x:Name="PortBox" Margin="0,6" Width="120" HorizontalAlignment="Left"/>
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="VRChat ホスト" VerticalAlignment="Center" Margin="0,6"/>
+        <TextBox   Grid.Row="5" Grid.Column="1" x:Name="HostBox" Margin="0,6" Width="200" HorizontalAlignment="Left"/>
 
-        <CheckBox Grid.Row="5" Grid.Column="1" x:Name="NotificationCheck" Margin="0,8,0,0"
+        <TextBlock Grid.Row="6" Grid.Column="0" Text="VRChat ポート" VerticalAlignment="Center" Margin="0,6"/>
+        <TextBox   Grid.Row="6" Grid.Column="1" x:Name="PortBox" Margin="0,6" Width="120" HorizontalAlignment="Left"/>
+
+        <CheckBox Grid.Row="7" Grid.Column="1" x:Name="NotificationCheck" Margin="0,8,0,0"
                   Content="Chatbox 通知音を鳴らす (/chatbox/input 第3引数)"/>
-        <CheckBox Grid.Row="6" Grid.Column="1" x:Name="IndicatorCheck" Margin="0,8,0,0"
+        <CheckBox Grid.Row="8" Grid.Column="1" x:Name="IndicatorCheck" Margin="0,8,0,0"
                   Content="入力中インジケーター (/chatbox/typing) を送る"/>
-        <CheckBox Grid.Row="7" Grid.Column="1" x:Name="ShowLabelCheck" Margin="0,8,0,0"
+        <CheckBox Grid.Row="9" Grid.Column="1" x:Name="ShowLabelCheck" Margin="0,8,0,0"
                   Content="label フィールドの [～] を表示する"/>
-        <CheckBox Grid.Row="8" Grid.Column="1" x:Name="StripBracketsCheck" Margin="0,8,0,0"
+        <CheckBox Grid.Row="10" Grid.Column="1" x:Name="StripBracketsCheck" Margin="0,8,0,0"
                   Content="曲名 (title) 内の [～] を除去する"/>
 
-        <StackPanel Grid.Row="10" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+        <StackPanel Grid.Row="12" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
             <Button Content="OK"       Width="90" Margin="0,0,8,0" IsDefault="True" Click="Ok_Click"/>
             <Button Content="キャンセル" Width="90" IsCancel="True"/>
         </StackPanel>

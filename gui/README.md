@@ -55,6 +55,7 @@ GUI の **［設定...］** から変更でき、内容は次に保存されま�
 | Source | `auto` | `auto` / `config` / `socketio`（現状 config.json 監視を実装） |
 | ConfigPath | `%USERPROFILE%\.nowplaying\config.json` | NP2 の config.json |
 | PollIntervalSeconds | `0.5` | 監視ポーリング間隔（秒） |
+| NpUrl | （空） | Socket.IO 接続先 URL。空欄なら config.json の `localSocketPort` から自動検出（例: `http://localhost:29000`）。未検出時は `http://localhost:9000` |
 | VrcHost | `127.0.0.1` | OSC 送信先ホスト |
 | VrcPort | `9000` | OSC 送信先ポート |
 | ChatboxNotification | `false` | `/chatbox/input` の通知音 |

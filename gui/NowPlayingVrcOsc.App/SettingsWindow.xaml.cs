@@ -25,13 +25,25 @@ public partial class SettingsWindow : Window
         SelectSource(s.Source);
         ConfigPathBox.Text = s.ConfigPath;
         PollBox.Text = s.PollIntervalSeconds.ToString(CultureInfo.InvariantCulture);
+        NpUrlBox.Text = s.NpUrl;
         HostBox.Text = s.VrcHost;
         PortBox.Text = s.VrcPort.ToString(CultureInfo.InvariantCulture);
         NotificationCheck.IsChecked = s.ChatboxNotification;
         IndicatorCheck.IsChecked = s.ChatboxIndicator;
         ShowLabelCheck.IsChecked = s.ShowLabel;
         StripBracketsCheck.IsChecked = s.StripTitleBrackets;
+        UpdateNpUrlHint();
     }
+
+    // 入力中の config.json パスから自動検出される Socket.IO 接続先を表示（接続先の見える化）
+    private void UpdateNpUrlHint()
+    {
+        if (NpUrlHint is null) return;
+        var auto = NpConfig.ResolveNpUrl(null, ConfigPathBox.Text?.Trim() ?? "");
+        NpUrlHint.Text = $"空欄 = config.json の localSocketPort から自動検出（現在: {auto}）";
+    }
+
+    private void ConfigPathBox_TextChanged(object sender, TextChangedEventArgs e) => UpdateNpUrlHint();
 
     private void SelectSource(string source)
     {
@@ -86,6 +98,7 @@ public partial class SettingsWindow : Window
             Source = (SourceCombo.SelectedItem as ComboBoxItem)?.Content as string ?? "auto",
             ConfigPath = ConfigPathBox.Text.Trim(),
             PollIntervalSeconds = poll,
+            NpUrl = NpUrlBox.Text.Trim(),
             VrcHost = HostBox.Text.Trim(),
             VrcPort = port,
             ChatboxNotification = NotificationCheck.IsChecked == true,

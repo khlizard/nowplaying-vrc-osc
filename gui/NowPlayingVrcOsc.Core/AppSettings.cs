@@ -8,6 +8,9 @@ public class AppSettings
     public string Source { get; set; } = "auto";
     public string ConfigPath { get; set; } = DefaultConfigPath();
     public double PollIntervalSeconds { get; set; } = 0.5;
+
+    // Socket.IO 接続先 URL。空のときは config.json の localSocketPort から自動検出。
+    public string NpUrl { get; set; } = "";
     public string VrcHost { get; set; } = "127.0.0.1";
     public int VrcPort { get; set; } = 9000;
     public bool ChatboxNotification { get; set; } = false;

@@ -82,7 +82,7 @@ public partial class MainWindow : Window
 
         StartButton.IsEnabled = false;
         StopButton.IsEnabled = true;
-        StatusText.Text = $"監視中 (config.json: {_settings.ConfigPath})";
+        StatusText.Text = "監視中 (config.json)";
 
         _ = bridge.StartAsync().ContinueWith(_ =>
             Dispatcher.Invoke(() =>
