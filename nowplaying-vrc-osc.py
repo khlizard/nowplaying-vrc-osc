@@ -16,6 +16,15 @@ DEFAULT_SERVICE = "NowPlayingTrackReceivers"
 DEFAULT_TEST_MESSAGE = "nowplaying-vrc-osc テスト"
 DEFAULT_SOURCE = "auto"
 DEFAULT_POLL_INTERVAL = 0.5
+DEFAULT_CHATBOX_NOTIFICATION = False
+DEFAULT_CHATBOX_INDICATOR = False
+
+
+def env_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in ("1", "true", "yes", "on")
 
 
 def default_config_path() -> Path:
@@ -76,6 +85,36 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=int(os.getenv("VRC_OSC_PORT", DEFAULT_VRC_PORT)),
         help=f"VRChat OSC 送信先ポート（既定: {DEFAULT_VRC_PORT}）",
+    )
+    notification = parser.add_mutually_exclusive_group()
+    notification.add_argument(
+        "--notification",
+        dest="notification",
+        action="store_true",
+        help="Chatbox 送信時に通知音を鳴らす",
+    )
+    notification.add_argument(
+        "--no-notification",
+        dest="notification",
+        action="store_false",
+        help="Chatbox 送信時に通知音を鳴らさない",
+    )
+    indicator = parser.add_mutually_exclusive_group()
+    indicator.add_argument(
+        "--indicator",
+        dest="indicator",
+        action="store_true",
+        help="Chatbox 送信前後で入力中インジケーターを表示する",
+    )
+    indicator.add_argument(
+        "--no-indicator",
+        dest="indicator",
+        action="store_false",
+        help="入力中インジケーターを表示しない",
+    )
+    parser.set_defaults(
+        notification=env_bool("VRC_CHATBOX_NOTIFICATION", DEFAULT_CHATBOX_NOTIFICATION),
+        indicator=env_bool("VRC_CHATBOX_INDICATOR", DEFAULT_CHATBOX_INDICATOR),
     )
     return parser.parse_args()
 
@@ -157,11 +196,31 @@ def make_track_handler(on_track, last_key: dict | None = None):
     return handle_track
 
 
-def run_send_only(host: str, port: int, message: str) -> None:
+def send_chatbox(
+    client: udp_client.SimpleUDPClient,
+    message: str,
+    notification: bool,
+    indicator: bool,
+) -> None:
+    if indicator:
+        client.send_message("/chatbox/typing", [True])
+    client.send_message("/chatbox/input", [message, True, notification])
+    if indicator:
+        client.send_message("/chatbox/typing", [False])
+
+
+def run_send_only(
+    host: str,
+    port: int,
+    message: str,
+    notification: bool,
+    indicator: bool,
+) -> None:
     client = udp_client.SimpleUDPClient(host, port)
-    client.send_message("/chatbox/input", [message, True, False])
+    send_chatbox(client, message, notification, indicator)
     print(f"VRChat へ送信しました ({host}:{port})")
     print(f"  /chatbox/input → {message!r}")
+    print(f"  通知音: {'ON' if notification else 'OFF'} / インジケーター: {'ON' if indicator else 'OFF'}")
 
 
 def run_config_watcher(
@@ -284,13 +343,15 @@ def run_bridge(
     np_url: str,
     vrc_host: str,
     vrc_port: int,
+    notification: bool,
+    indicator: bool,
 ) -> None:
     osc = udp_client.SimpleUDPClient(vrc_host, vrc_port)
 
     def on_track(track: dict) -> None:
         text = f"🎵 Now Playing: {format_track(track)}"
         print(text)
-        osc.send_message("/chatbox/input", [text, True, False])
+        send_chatbox(osc, text, notification, indicator)
 
     run_track_source(source, config_path, poll_interval, np_url, on_track)
 
@@ -301,14 +362,29 @@ def main() -> None:
     np_url = resolve_np_url(args.np_url, config_path)
 
     if args.send_only:
-        run_send_only(args.vrc_host, args.vrc_port, args.message)
+        run_send_only(
+            args.vrc_host,
+            args.vrc_port,
+            args.message,
+            args.notification,
+            args.indicator,
+        )
         return
 
     if args.receive_only:
         run_receive_only(args.source, config_path, args.poll_interval, np_url)
         return
 
-    run_bridge(args.source, config_path, args.poll_interval, np_url, args.vrc_host, args.vrc_port)
+    run_bridge(
+        args.source,
+        config_path,
+        args.poll_interval,
+        np_url,
+        args.vrc_host,
+        args.vrc_port,
+        args.notification,
+        args.indicator,
+    )
 
 
 if __name__ == "__main__":
