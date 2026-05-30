@@ -1,7 +1,10 @@
 import argparse
+import json
 import os
 import sys
+import time
 import uuid
+from pathlib import Path
 
 import socketio
 from pythonosc import udp_client
@@ -11,6 +14,12 @@ DEFAULT_VRC_HOST = "127.0.0.1"
 DEFAULT_VRC_PORT = 9000
 DEFAULT_SERVICE = "NowPlayingTrackReceivers"
 DEFAULT_TEST_MESSAGE = "nowplaying-vrc-osc テスト"
+DEFAULT_SOURCE = "auto"
+DEFAULT_POLL_INTERVAL = 0.5
+
+
+def default_config_path() -> Path:
+    return Path.home() / ".nowplaying" / "config.json"
 
 
 def parse_args() -> argparse.Namespace:
@@ -36,9 +45,26 @@ def parse_args() -> argparse.Namespace:
         help="--send-only 時に送るテキスト（省略時: nowplaying-vrc-osc テスト）",
     )
     parser.add_argument(
+        "--source",
+        choices=("auto", "config", "socketio"),
+        default=os.getenv("NP_SOURCE", DEFAULT_SOURCE),
+        help="曲情報の取得方式（既定: auto = config.json 監視、失敗時 Socket.IO）",
+    )
+    parser.add_argument(
+        "--np-config-path",
+        default=os.getenv("NP_CONFIG_PATH"),
+        help="NP2 config.json のパス（省略時: ~/.nowplaying/config.json）",
+    )
+    parser.add_argument(
+        "--poll-interval",
+        type=float,
+        default=float(os.getenv("NP_POLL_INTERVAL", DEFAULT_POLL_INTERVAL)),
+        help=f"config.json 監視のポーリング間隔秒（既定: {DEFAULT_POLL_INTERVAL}）",
+    )
+    parser.add_argument(
         "--np-url",
-        default=os.getenv("NP_URL", DEFAULT_NP_URL),
-        help=f"NP2 の Socket.IO URL（既定: {DEFAULT_NP_URL}）",
+        default=os.getenv("NP_URL"),
+        help=f"NP2 の Socket.IO URL（省略時: config.json の localSocketPort から自動、なければ {DEFAULT_NP_URL}）",
     )
     parser.add_argument(
         "--vrc-host",
@@ -54,6 +80,59 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def resolve_config_path(explicit: str | None) -> Path:
+    if explicit:
+        return Path(explicit)
+    return default_config_path()
+
+
+def read_config(config_path: Path) -> dict | None:
+    if not config_path.is_file():
+        return None
+    try:
+        return json.loads(config_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def read_current_track(config_path: Path) -> dict | None:
+    data = read_config(config_path)
+    if not data:
+        return None
+    track = data.get("currentTrack")
+    if not isinstance(track, dict):
+        return None
+    if not track.get("title"):
+        return None
+    return track
+
+
+def np_url_from_config(config_path: Path) -> str | None:
+    data = read_config(config_path)
+    if not data:
+        return None
+    port = data.get("localSocketPort")
+    if port:
+        return f"http://localhost:{port}"
+    return None
+
+
+def resolve_np_url(explicit: str | None, config_path: Path) -> str:
+    if explicit:
+        return explicit
+    from_config = np_url_from_config(config_path)
+    if from_config:
+        return from_config
+    return DEFAULT_NP_URL
+
+
+def track_key(track: dict) -> str:
+    track_id = track.get("id")
+    if track_id:
+        return str(track_id)
+    return track.get("title", "")
+
+
 def format_track(track: dict) -> str:
     title = track.get("title", "")
     artist = track.get("artist", "")
@@ -64,6 +143,20 @@ def format_track(track: dict) -> str:
     return " ".join(parts)
 
 
+def make_track_handler(on_track, last_key: dict | None = None):
+    if last_key is None:
+        last_key = {"value": None}
+
+    def handle_track(track: dict) -> None:
+        key = track_key(track)
+        if not key or key == last_key["value"]:
+            return
+        last_key["value"] = key
+        on_track(track)
+
+    return handle_track
+
+
 def run_send_only(host: str, port: int, message: str) -> None:
     client = udp_client.SimpleUDPClient(host, port)
     client.send_message("/chatbox/input", [message, True, False])
@@ -71,16 +164,43 @@ def run_send_only(host: str, port: int, message: str) -> None:
     print(f"  /chatbox/input → {message!r}")
 
 
-def run_np_listener(np_url: str, on_track) -> None:
-    sio = socketio.Client()
-    last_title = {"value": None}
+def run_config_watcher(
+    config_path: Path,
+    poll_interval: float,
+    on_track,
+    np_url: str,
+) -> None:
+    last_key = {"value": None}
+    handle_track = make_track_handler(on_track, last_key)
+    last_mtime: float | None = None
 
-    def handle_track(track: dict) -> None:
-        title = track.get("title", "")
-        if not title or title == last_title["value"]:
+    print(f"config.json を監視しています ({config_path})")
+    print("曲情報の更新を待っています… (Ctrl+C で終了)")
+
+    while True:
+        if not config_path.is_file():
+            print(f"警告: {config_path} が見つかりません。Socket.IO に切り替えます。")
+            run_np_listener(np_url, on_track, last_key)
             return
-        last_title["value"] = title
-        on_track(track)
+
+        try:
+            mtime = config_path.stat().st_mtime
+        except OSError:
+            time.sleep(poll_interval)
+            continue
+
+        if last_mtime is None or mtime != last_mtime:
+            last_mtime = mtime
+            track = read_current_track(config_path)
+            if track:
+                handle_track(track)
+
+        time.sleep(poll_interval)
+
+
+def run_np_listener(np_url: str, on_track, last_key: dict | None = None) -> None:
+    sio = socketio.Client()
+    handle_track = make_track_handler(on_track, last_key)
 
     @sio.on("connect")
     def on_connect() -> None:
@@ -119,14 +239,52 @@ def run_np_listener(np_url: str, on_track) -> None:
     sio.wait()
 
 
-def run_receive_only(np_url: str) -> None:
+def run_track_source(
+    source: str,
+    config_path: Path,
+    poll_interval: float,
+    np_url: str,
+    on_track,
+) -> None:
+    if source == "config":
+        if not config_path.is_file():
+            print(f"エラー: config.json が見つかりません ({config_path})", file=sys.stderr)
+            sys.exit(1)
+        run_config_watcher(config_path, poll_interval, on_track, np_url)
+        return
+
+    if source == "socketio":
+        run_np_listener(np_url, on_track)
+        return
+
+    # auto: config 監視優先、なければ Socket.IO
+    if config_path.is_file():
+        run_config_watcher(config_path, poll_interval, on_track, np_url)
+    else:
+        print(f"警告: {config_path} が見つかりません。Socket.IO を使用します ({np_url})")
+        run_np_listener(np_url, on_track)
+
+
+def run_receive_only(
+    source: str,
+    config_path: Path,
+    poll_interval: float,
+    np_url: str,
+) -> None:
     def on_track(track: dict) -> None:
         print(format_track(track))
 
-    run_np_listener(np_url, on_track)
+    run_track_source(source, config_path, poll_interval, np_url, on_track)
 
 
-def run_bridge(np_url: str, vrc_host: str, vrc_port: int) -> None:
+def run_bridge(
+    source: str,
+    config_path: Path,
+    poll_interval: float,
+    np_url: str,
+    vrc_host: str,
+    vrc_port: int,
+) -> None:
     osc = udp_client.SimpleUDPClient(vrc_host, vrc_port)
 
     def on_track(track: dict) -> None:
@@ -134,21 +292,23 @@ def run_bridge(np_url: str, vrc_host: str, vrc_port: int) -> None:
         print(text)
         osc.send_message("/chatbox/input", [text, True, False])
 
-    run_np_listener(np_url, on_track)
+    run_track_source(source, config_path, poll_interval, np_url, on_track)
 
 
 def main() -> None:
     args = parse_args()
+    config_path = resolve_config_path(args.np_config_path)
+    np_url = resolve_np_url(args.np_url, config_path)
 
     if args.send_only:
         run_send_only(args.vrc_host, args.vrc_port, args.message)
         return
 
     if args.receive_only:
-        run_receive_only(args.np_url)
+        run_receive_only(args.source, config_path, args.poll_interval, np_url)
         return
 
-    run_bridge(args.np_url, args.vrc_host, args.vrc_port)
+    run_bridge(args.source, config_path, args.poll_interval, np_url, args.vrc_host, args.vrc_port)
 
 
 if __name__ == "__main__":

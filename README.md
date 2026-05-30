@@ -7,16 +7,17 @@
 ## 概要
 
 ```
-Now Playing App 2 (Socket.IO)
-        │
-        ▼  trackUpdate
-  nowplaying-vrc-osc.py
-        │
-        ▼  /chatbox/input
-  VRChat (OSC UDP)
+Now Playing App 2
+ ├── config.json (currentTrack)  ── poll（既定）──┐
+ └── Socket.IO :<ポート>  ── fallback ──────────┤
+                                                 ▼
+                                    nowplaying-vrc-osc.py
+                                                 │
+                                                 ▼  /chatbox/input
+                                    VRChat (OSC UDP)
 ```
 
-DJ ソフト（RekordBox、Serato、Traktor、Pro DJ Link 等）から NP2 が取得した曲名・アーティスト名を、VRC のチャットボックスに `🎵 Now Playing: Artist - Title` 形式で送ります。同じ曲が続く間は再送信しません。
+DJ ソフト（RekordBox、Serato、Traktor、Pro DJ Link 等）から NP2 が取得した曲名・アーティスト名を、VRC のチャットボックスに `🎵 Now Playing: Artist - Title` 形式で送ります。同じ曲が続く間は再送信しません（`currentTrack.id` で判定）。
 
 ## 必要環境
 
@@ -36,11 +37,14 @@ pip install -r requirements.txt
 
 | 変数 | 既定値 | 説明 |
 |---|---|---|
-| `NP_URL` | `http://localhost:9000` | NP2 の Socket.IO URL |
+| `NP_SOURCE` | `auto` | 取得方式: `auto` / `config` / `socketio` |
+| `NP_CONFIG_PATH` | `~/.nowplaying/config.json` | NP2 の config.json パス |
+| `NP_POLL_INTERVAL` | `0.5` | config.json 監視間隔（秒） |
+| `NP_URL` | config から自動 → `http://localhost:9000` | Socket.IO URL（フォールバック時） |
 | `VRC_OSC_HOST` | `127.0.0.1` | VRChat OSC 送信先 |
 | `VRC_OSC_PORT` | `9000` | VRChat OSC 受信ポート |
 
-NP2 のポートはアプリ UI または `GET /config` で確認してください。
+NP2 の Socket.IO ポートは `config.json` の `localSocketPort`、またはアプリ UI / `GET /config` で確認できます。
 
 ## VRChat 側の設定
 
@@ -57,7 +61,7 @@ NP2 のポートはアプリ UI または `GET /config` で確認してくださ
 python nowplaying-vrc-osc.py
 ```
 
-NP2 を起動し、曲が変わるたびに Chatbox へ送信します。
+NP2 を起動し、曲が変わるたびに Chatbox へ送信します。既定では `%USERPROFILE%\.nowplaying\config.json` を監視します。
 
 ### テスト: NP2 からの受信のみ
 
@@ -87,7 +91,10 @@ python nowplaying-vrc-osc.py --help
 | `--receive-only` | NP2 受信テスト |
 | `--send-only` | VRChat 送信テスト |
 | `-m`, `--message` | `--send-only` 時の送信テキスト |
-| `--np-url` | NP2 の URL |
+| `--source` | `auto`（既定）/ `config` / `socketio` |
+| `--np-config-path` | config.json のパス |
+| `--poll-interval` | config 監視間隔（秒） |
+| `--np-url` | Socket.IO URL |
 | `--vrc-host` | VRChat OSC ホスト |
 | `--vrc-port` | VRChat OSC ポート |
 
@@ -95,7 +102,7 @@ python nowplaying-vrc-osc.py --help
 
 | パス | 内容 |
 |---|---|
-| [`docs/now-playing-app/external-connection.ja.md`](docs/now-playing-app/external-connection.ja.md) | NP2 への外部接続（Socket.IO API） |
+| [`docs/now-playing-app/external-connection.ja.md`](docs/now-playing-app/external-connection.ja.md) | NP2 への外部接続（ファイル監視 / Socket.IO API） |
 | [`docs/vrc_osc_ja/`](docs/vrc_osc_ja/) | VRChat OSC ドキュメント（日本語） |
 | [`docs/vrc_osc/`](docs/vrc_osc/) | VRChat OSC ドキュメント（英語原文） |
 
@@ -103,9 +110,11 @@ python nowplaying-vrc-osc.py --help
 
 | 症状 | 確認すること |
 |---|---|
-| NP2 に接続できない | NP2 が起動しているか。`--np-url` のポートが正しいか |
+| 曲が更新されない | NP2 が起動しているか。DJ ソフト側で曲がロード／再生されているか |
+| config 監視が動かない | `%USERPROFILE%\.nowplaying\config.json` が存在するか。`--np-config-path` を確認 |
+| Socket.IO にフォールバックされる | config.json のパスが正しいか。`--source config` で強制監視を試す |
 | VRChat に表示されない | OSC が有効か。`--send-only` で送信テスト |
-| 曲が更新されない | DJ ソフト側で曲がロード／再生されているか |
+| ポート不一致 | `config.json` の `localSocketPort` を確認。`--np-url http://localhost:<ポート>` を指定 |
 
 ## ライセンス
 
