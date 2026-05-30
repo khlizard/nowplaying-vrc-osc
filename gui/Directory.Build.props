@@ -1,8 +1,8 @@
 <Project>
   <PropertyGroup>
-    <Version>1.0.0-beta.2</Version>
-    <AssemblyVersion>1.0.0.2</AssemblyVersion>
-    <FileVersion>1.0.0.2</FileVersion>
+    <Version>1.1.0-beta</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
     <Product>DJ Now Playing for VRChat</Product>
     <Company>tokage works</Company>
     <Copyright>Copyright © 2026 tokage works</Copyright>

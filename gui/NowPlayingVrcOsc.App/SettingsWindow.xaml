@@ -4,10 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="設定 — Now Playing → VRChat" Height="640" Width="580"
+        Title="設定 — Now Playing → VRChat" Height="720" Width="580"
         ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="14">
-        <Grid>
+        <Grid Margin="14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="170"/>
                 <ColumnDefinition Width="*"/>
@@ -120,5 +119,4 @@
                 <Button Content="キャンセル" Width="90" IsCancel="True"/>
             </StackPanel>
         </Grid>
-    </ScrollViewer>
 </Window>
