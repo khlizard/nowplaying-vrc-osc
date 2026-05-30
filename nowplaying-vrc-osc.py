@@ -10,11 +10,12 @@ DEFAULT_NP_URL = "http://localhost:9000"
 DEFAULT_VRC_HOST = "127.0.0.1"
 DEFAULT_VRC_PORT = 9000
 DEFAULT_SERVICE = "NowPlayingTrackReceivers"
-DEFAULT_TEST_MESSAGE = "🎵 Now Playing OSC テスト"
+DEFAULT_TEST_MESSAGE = "nowplaying-vrc-osc テスト"
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
+        prog="nowplaying-vrc-osc",
         description="Now Playing App 2 から曲情報を取得し VRChat Chatbox へ OSC 送信するブリッジ",
     )
     mode = parser.add_mutually_exclusive_group()
@@ -32,7 +33,7 @@ def parse_args() -> argparse.Namespace:
         "--message",
         "-m",
         default=DEFAULT_TEST_MESSAGE,
-        help="--send-only 時に送るテキスト（省略時: Now Playing OSC テスト）",
+        help="--send-only 時に送るテキスト（省略時: nowplaying-vrc-osc テスト）",
     )
     parser.add_argument(
         "--np-url",
