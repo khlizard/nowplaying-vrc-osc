@@ -72,8 +72,40 @@ GUI の **［設定...］** から変更でき、内容は次に保存されま�
 - Chatbox 文言: `🎵` + 空白 + フォーマット結果
 - OSC: `/chatbox/input [text, true, notification]`、`/chatbox/typing [bool]`
 
+## 配布用ビルド（ベータ / BOOTH）
+
+.NET 未インストール環境向けに、ランタイム同梱の ZIP を生成します。
+
+```powershell
+.\gui\scripts\publish-release.ps1
+# または
+.\gui\scripts\publish-release.bat
+```
+
+出力:
+
+```
+dist/nowplaying-vrc-osc-gui-v<Version>-win-x64/
+dist/nowplaying-vrc-osc-gui-v<Version>-win-x64.zip
+```
+
+| オプション | 説明 |
+|---|---|
+| `-Format Single` | 単一 exe（既定） |
+| `-Format Folder` | exe + DLL フォルダ形式（WPF で単一 exe に問題がある場合） |
+| `-Version 1.0.0-beta.2` | パッケージ名のバージョン上書き |
+| `-SkipZip` | ZIP 作成を省略 |
+
+バージョンは [`Directory.Build.props`](Directory.Build.props) の `<Version>` で管理します。
+同梱 README・ライセンス表記のテンプレートは [`../release/`](../release/) にあります。
+BOOTH 公開前の確認項目は [`../release/booth-checklist.ja.md`](../release/booth-checklist.ja.md) を参照。
+
+配布前の確認:
+
+1. .NET **未インストール**の PC で ZIP を解凍して `NowPlayingVrcOsc.exe` を起動
+2. NP2 + VRChat で曲切替・テスト送信
+
 ## 今後の予定
 
 - 送信ログウィンドウ
 - 起動時トレイ最小化・Windows スタートアップ登録
-- `PublishSingleFile` による単一 exe 配布

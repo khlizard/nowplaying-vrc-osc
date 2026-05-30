@@ -294,7 +294,7 @@ Python 版と **同一リポジトリ**、`docs/` を共有。
 - Socket.IO フォールバック（`TrackSourceCoordinator`）
 - 送信ログウィンドウ
 - 起動時トレイ最小化
-- `PublishSingleFile` で exe 配布
+- [x] `PublishSingleFile` で exe 配布（`gui/scripts/publish-release.ps1`、`release/` テンプレート）
 - README（gui 用）追加
 
 ---

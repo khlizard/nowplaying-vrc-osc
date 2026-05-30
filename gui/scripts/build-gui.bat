@@ -28,6 +28,7 @@ if errorlevel 1 (
 
 echo.
 echo === [2/4] 実行中のアプリを終了（ロック回避） ===
+taskkill /IM NowPlayingVrcOsc.exe /F >nul 2>&1
 taskkill /IM NowPlayingVrcOsc.App.exe /F >nul 2>&1
 
 echo.
@@ -52,8 +53,8 @@ popd
 
 echo.
 echo === 完了 ===
-echo Debug:   %GUI_DIR%\NowPlayingVrcOsc.App\bin\Debug\net10.0-windows\NowPlayingVrcOsc.App.exe
-echo Release: %GUI_DIR%\NowPlayingVrcOsc.App\bin\Release\net10.0-windows\NowPlayingVrcOsc.App.exe
+echo Debug:   %GUI_DIR%\NowPlayingVrcOsc.App\bin\Debug\net10.0-windows\NowPlayingVrcOsc.exe
+echo Release: %GUI_DIR%\NowPlayingVrcOsc.App\bin\Release\net10.0-windows\NowPlayingVrcOsc.exe
 echo.
 
 endlocal

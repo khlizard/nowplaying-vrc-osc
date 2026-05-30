@@ -6,7 +6,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
+dist/          # Python wheel / GUI release ZIP 出力
 downloads/
 eggs/
 .eggs/

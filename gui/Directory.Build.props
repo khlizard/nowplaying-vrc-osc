@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <Version>1.0.0-beta</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Product>Now Playing → VRChat</Product>
+    <Company>Now Playing VRC OSC</Company>
+    <Copyright>Copyright © 2026 Now Playing VRC OSC</Copyright>
+  </PropertyGroup>
+</Project>

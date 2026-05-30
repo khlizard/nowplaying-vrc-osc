@@ -1,0 +1,41 @@
+THIRD-PARTY NOTICES
+Now Playing → VRChat
+
+This application includes third-party software components.
+The following notices are provided for attribution and compliance purposes.
+
+
+================================================================================
+.NET Runtime
+================================================================================
+
+  Component : .NET Runtime (included in self-contained deployment)
+  License   : MIT License
+  Copyright : .NET Foundation and Contributors
+  https://github.com/dotnet/runtime
+
+
+================================================================================
+SocketIOClient
+================================================================================
+
+  Component : SocketIOClient
+  Version   : 3.1.1
+  License   : MIT License
+  Copyright : Copyright (c) 2020 doggy8088
+  https://github.com/doggy8088/dotnet-core-socketio-client
+
+
+================================================================================
+System.Text.Json
+================================================================================
+
+  Component : System.Text.Json (via .NET)
+  License   : MIT License
+  Copyright : .NET Foundation and Contributors
+
+
+================================================================================
+
+For the full MIT License text, see:
+https://opensource.org/licenses/MIT
