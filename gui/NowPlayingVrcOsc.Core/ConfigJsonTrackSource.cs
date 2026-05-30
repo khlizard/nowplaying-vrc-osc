@@ -53,26 +53,9 @@ public sealed class ConfigJsonTrackSource : ITrackSource
             var json = File.ReadAllText(_configPath, Encoding.UTF8);
             using var doc = JsonDocument.Parse(json);
             if (!doc.RootElement.TryGetProperty("currentTrack", out var trackEl)) return null;
-            if (trackEl.ValueKind != JsonValueKind.Object) return null;
-
-            var title = GetString(trackEl, "title");
-            if (string.IsNullOrEmpty(title)) return null;
-
-            return new TrackInfo(
-                Id: GetString(trackEl, "id"),
-                Title: title,
-                Artist: GetString(trackEl, "artist"),
-                Label: GetString(trackEl, "label")
-            );
+            return NpConfig.ParseTrack(trackEl);
         }
         catch { return null; }
-    }
-
-    private static string? GetString(JsonElement el, string property)
-    {
-        if (el.TryGetProperty(property, out var val) && val.ValueKind == JsonValueKind.String)
-            return val.GetString();
-        return null;
     }
 
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;

@@ -20,6 +20,10 @@ DEFAULT_CHATBOX_NOTIFICATION = False
 DEFAULT_CHATBOX_INDICATOR = False
 DEFAULT_SHOW_LABEL = False
 DEFAULT_STRIP_TITLE_BRACKETS = True
+DEFAULT_MSG_HEADER = "🎵"
+DEFAULT_MSG_SEPARATOR = "-"
+DEFAULT_MSG_FIELDS = "title,artist"
+MSG_FIELD_ORDER = ("title", "artist", "album", "label", "comment")
 
 TITLE_BRACKETS_RE = re.compile(r"\s*\[[^\]]*\]")
 
@@ -150,6 +154,24 @@ def parse_args() -> argparse.Namespace:
         action="store_false",
         help="曲名（title）内の [～] を残す",
     )
+    parser.add_argument(
+        "--msg-header",
+        default=os.getenv("NP_MSG_HEADER", DEFAULT_MSG_HEADER),
+        help=f"Chatbox 先頭のヘッダ（既定: {DEFAULT_MSG_HEADER!r}）",
+    )
+    parser.add_argument(
+        "--msg-separator",
+        default=os.getenv("NP_MSG_SEPARATOR", DEFAULT_MSG_SEPARATOR),
+        help=f"項目間の区切り文字（既定: {DEFAULT_MSG_SEPARATOR!r}）",
+    )
+    parser.add_argument(
+        "--msg-fields",
+        default=os.getenv("NP_MSG_FIELDS", DEFAULT_MSG_FIELDS),
+        help=(
+            "表示する項目（カンマ区切り: title,artist,album,label,comment。"
+            f" 既定: {DEFAULT_MSG_FIELDS}）"
+        ),
+    )
     parser.set_defaults(
         notification=env_bool("VRC_CHATBOX_NOTIFICATION", DEFAULT_CHATBOX_NOTIFICATION),
         indicator=env_bool("VRC_CHATBOX_INDICATOR", DEFAULT_CHATBOX_INDICATOR),
@@ -227,29 +249,63 @@ def normalize_field(value: object) -> str:
     return text
 
 
+def resolve_msg_fields(fields_str: str, show_label: bool = False) -> list[str]:
+    allowed = set(MSG_FIELD_ORDER)
+    selected = {
+        f.strip().lower()
+        for f in fields_str.split(",")
+        if f.strip().lower() in allowed
+    }
+    if show_label:
+        selected.add("label")
+    return [f for f in MSG_FIELD_ORDER if f in selected]
+
+
+def format_chatbox_message(
+    track: dict,
+    header: str = DEFAULT_MSG_HEADER,
+    separator: str = DEFAULT_MSG_SEPARATOR,
+    fields: list[str] | None = None,
+    strip_title_brackets: bool = DEFAULT_STRIP_TITLE_BRACKETS,
+) -> str:
+    if fields is None:
+        fields = list(MSG_FIELD_ORDER[:2])
+    sep = (separator or DEFAULT_MSG_SEPARATOR).strip() or DEFAULT_MSG_SEPARATOR
+    joiner = f" {sep} "
+    parts: list[str] = []
+    for name in fields:
+        if name == "title":
+            value = normalize_field(track.get("title"))
+            if strip_title_brackets and value:
+                value = remove_brackets(value)
+        else:
+            value = normalize_field(track.get(name))
+        if value:
+            parts.append(value)
+    body = joiner.join(parts)
+    hdr = (header or "").strip()
+    if not hdr:
+        return body
+    if not body:
+        return hdr
+    return f"{hdr} {body}"
+
+
 def format_track(
     track: dict,
     show_label: bool = DEFAULT_SHOW_LABEL,
     strip_title_brackets: bool = DEFAULT_STRIP_TITLE_BRACKETS,
 ) -> str:
-    title = normalize_field(track.get("title"))
-    if strip_title_brackets and title:
-        title = remove_brackets(title)
-    artist = normalize_field(track.get("artist"))
-    label = normalize_field(track.get("label"))
-
-    if title and artist:
-        parts = [f"{title} - {artist}"]
-    elif title:
-        parts = [title]
-    elif artist:
-        parts = [artist]
-    else:
-        parts = [""]
-
-    if label and show_label:
-        parts.append(f"[{label}]")
-    return " ".join(parts).strip()
+    """後方互換。format_chatbox_message の本文相当（ヘッダなし）。"""
+    fields = resolve_msg_fields(DEFAULT_MSG_FIELDS, show_label=show_label)
+    msg = format_chatbox_message(
+        track,
+        header="",
+        separator=DEFAULT_MSG_SEPARATOR,
+        fields=fields,
+        strip_title_brackets=strip_title_brackets,
+    )
+    return msg
 
 
 def make_track_handler(on_track, last_key: dict | None = None, skip_initial: bool = True):
@@ -388,11 +444,15 @@ def run_receive_only(
     config_path: Path,
     poll_interval: float,
     np_url: str,
-    show_label: bool,
+    msg_header: str,
+    msg_separator: str,
+    msg_fields: list[str],
     strip_title_brackets: bool,
 ) -> None:
     def on_track(track: dict) -> None:
-        print(format_track(track, show_label, strip_title_brackets))
+        print(format_chatbox_message(
+            track, msg_header, msg_separator, msg_fields, strip_title_brackets
+        ))
 
     run_track_source(source, config_path, poll_interval, np_url, on_track)
 
@@ -406,13 +466,17 @@ def run_bridge(
     vrc_port: int,
     notification: bool,
     indicator: bool,
-    show_label: bool,
+    msg_header: str,
+    msg_separator: str,
+    msg_fields: list[str],
     strip_title_brackets: bool,
 ) -> None:
     osc = udp_client.SimpleUDPClient(vrc_host, vrc_port)
 
     def on_track(track: dict) -> None:
-        text = f"🎵 {format_track(track, show_label, strip_title_brackets)}"
+        text = format_chatbox_message(
+            track, msg_header, msg_separator, msg_fields, strip_title_brackets
+        )
         print(text)
         send_chatbox(osc, text, notification, indicator)
 
@@ -435,13 +499,17 @@ def main() -> None:
         )
         return
 
+    msg_fields = resolve_msg_fields(args.msg_fields, show_label=args.show_label)
+
     if args.receive_only:
         run_receive_only(
             args.source,
             config_path,
             args.poll_interval,
             np_url,
-            args.show_label,
+            args.msg_header,
+            args.msg_separator,
+            msg_fields,
             args.strip_title_brackets,
         )
         return
@@ -455,7 +523,9 @@ def main() -> None:
         args.vrc_port,
         args.notification,
         args.indicator,
-        args.show_label,
+        args.msg_header,
+        args.msg_separator,
+        msg_fields,
         args.strip_title_brackets,
     )
 

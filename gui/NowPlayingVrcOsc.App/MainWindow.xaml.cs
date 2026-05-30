@@ -91,8 +91,8 @@ public partial class MainWindow : Window
 
         _bridge.TrackChanged += track =>
             Dispatcher.Invoke(() =>
-                CurrentTrackText.Text = TrackFormatter.FormatTrack(
-                    track, _settings.ShowLabel, _settings.StripTitleBrackets));
+                CurrentTrackText.Text = TrackFormatter.FormatTrackBody(
+                    track, _settings.ToMessageFormat()));
 
         _bridge.MessageSent += msg =>
             Dispatcher.Invoke(() =>

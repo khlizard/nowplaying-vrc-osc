@@ -56,7 +56,7 @@ public sealed class BridgeService : IAsyncDisposable
 
         TrackChanged?.Invoke(track);
 
-        var message = TrackFormatter.FormatChatboxMessage(track, _settings.ShowLabel, _settings.StripTitleBrackets);
+        var message = TrackFormatter.FormatChatboxMessage(track, _settings.ToMessageFormat());
         try
         {
             _sender?.Send(message);

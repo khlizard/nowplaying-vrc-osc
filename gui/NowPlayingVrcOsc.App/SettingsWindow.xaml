@@ -4,73 +4,121 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="設定 — Now Playing → VRChat" Height="500" Width="560"
+        Title="設定 — Now Playing → VRChat" Height="640" Width="580"
         ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
-    <Grid Margin="14">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="170"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <TextBlock Grid.Row="0" Grid.Column="0" Text="取得方式 (Source)" VerticalAlignment="Center" Margin="0,6"/>
-        <ComboBox  Grid.Row="0" Grid.Column="1" x:Name="SourceCombo" Margin="0,6" Width="160" HorizontalAlignment="Left">
-            <ComboBoxItem Content="auto"/>
-            <ComboBoxItem Content="config"/>
-            <ComboBoxItem Content="socketio"/>
-        </ComboBox>
-
-        <TextBlock Grid.Row="1" Grid.Column="0" Text="config.json パス" VerticalAlignment="Center" Margin="0,6"/>
-        <Grid Grid.Row="1" Grid.Column="1" Margin="0,6">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="14">
+        <Grid>
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="170"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0" x:Name="ConfigPathBox" VerticalAlignment="Center" TextChanged="ConfigPathBox_TextChanged"/>
-            <Button  Grid.Column="1" Content="参照..." Width="64" Margin="6,0,0,0" Click="Browse_Click"/>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="取得方式 (Source)" VerticalAlignment="Center" Margin="0,6"/>
+            <ComboBox  Grid.Row="0" Grid.Column="1" x:Name="SourceCombo" Margin="0,6" Width="160" HorizontalAlignment="Left">
+                <ComboBoxItem Content="auto"/>
+                <ComboBoxItem Content="config"/>
+                <ComboBoxItem Content="socketio"/>
+            </ComboBox>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="config.json パス" VerticalAlignment="Center" Margin="0,6"/>
+            <Grid Grid.Row="1" Grid.Column="1" Margin="0,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0" x:Name="ConfigPathBox" VerticalAlignment="Center"
+                         TextChanged="ConfigPathBox_TextChanged"/>
+                <Button  Grid.Column="1" Content="参照..." Width="64" Margin="6,0,0,0" Click="Browse_Click"/>
+            </Grid>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="ポーリング間隔 (秒)" VerticalAlignment="Center" Margin="0,6"/>
+            <TextBox   Grid.Row="2" Grid.Column="1" x:Name="PollBox" Margin="0,6" Width="120" HorizontalAlignment="Left"/>
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Socket.IO URL" VerticalAlignment="Center" Margin="0,6"/>
+            <TextBox   Grid.Row="3" Grid.Column="1" x:Name="NpUrlBox" Margin="0,6" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="4" Grid.Column="1" x:Name="NpUrlHint" Foreground="Gray" FontSize="11"
+                       TextWrapping="Wrap" Margin="0,0,0,4"
+                       Text="空欄 = config.json の localSocketPort から自動検出"/>
+
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="VRChat ホスト" VerticalAlignment="Center" Margin="0,6"/>
+            <TextBox   Grid.Row="5" Grid.Column="1" x:Name="HostBox" Margin="0,6" Width="200" HorizontalAlignment="Left"/>
+
+            <TextBlock Grid.Row="6" Grid.Column="0" Text="VRChat ポート" VerticalAlignment="Center" Margin="0,6"/>
+            <TextBox   Grid.Row="6" Grid.Column="1" x:Name="PortBox" Margin="0,6" Width="120" HorizontalAlignment="Left"/>
+
+            <CheckBox Grid.Row="7" Grid.Column="1" x:Name="NotificationCheck" Margin="0,8,0,0"
+                      Content="Chatbox 通知音を鳴らす (/chatbox/input 第3引数)"/>
+            <CheckBox Grid.Row="8" Grid.Column="1" x:Name="IndicatorCheck" Margin="0,8,0,0"
+                      Content="入力中インジケーター (/chatbox/typing) を送る"/>
+
+            <TextBlock Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Text="Chatbox メッセージ"
+                       FontWeight="SemiBold" Margin="0,16,0,4"/>
+
+            <TextBlock Grid.Row="10" Grid.Column="0" Text="ヘッダ" VerticalAlignment="Center" Margin="0,6"/>
+            <TextBox   Grid.Row="10" Grid.Column="1" x:Name="MsgHeaderBox" Margin="0,6" Width="200"
+                       HorizontalAlignment="Left" TextChanged="MessageFields_Changed"/>
+
+            <TextBlock Grid.Row="11" Grid.Column="0" Text="区切り文字" VerticalAlignment="Center" Margin="0,6"/>
+            <StackPanel Grid.Row="11" Grid.Column="1" Margin="0,6">
+                <TextBox x:Name="MsgSeparatorBox" Width="80" HorizontalAlignment="Left"
+                         TextChanged="MessageFields_Changed"/>
+                <TextBlock Foreground="Gray" FontSize="11" Margin="0,2,0,0"
+                           Text="結合時は前後にスペースが付きます（例: - → Title - Artist）"/>
+            </StackPanel>
+
+            <TextBlock Grid.Row="12" Grid.Column="0" Text="表示する項目" VerticalAlignment="Top" Margin="0,8"/>
+            <StackPanel Grid.Row="12" Grid.Column="1" Margin="0,6">
+                <CheckBox x:Name="IncludeTitleCheck" Content="title（曲名）" IsChecked="True"
+                          Margin="0,2" Checked="MessageFields_Changed" Unchecked="MessageFields_Changed"/>
+                <CheckBox x:Name="IncludeArtistCheck" Content="artist（アーティスト）" IsChecked="True"
+                          Margin="0,2" Checked="MessageFields_Changed" Unchecked="MessageFields_Changed"/>
+                <CheckBox x:Name="IncludeAlbumCheck" Content="album（アルバム）"
+                          Margin="0,2" Checked="MessageFields_Changed" Unchecked="MessageFields_Changed"/>
+                <CheckBox x:Name="IncludeLabelCheck" Content="label（レーベル）"
+                          Margin="0,2" Checked="MessageFields_Changed" Unchecked="MessageFields_Changed"/>
+                <CheckBox x:Name="IncludeCommentCheck" Content="comment（コメント）"
+                          Margin="0,2" Checked="MessageFields_Changed" Unchecked="MessageFields_Changed"/>
+            </StackPanel>
+
+            <CheckBox Grid.Row="13" Grid.Column="1" x:Name="StripBracketsCheck" Margin="0,8,0,0"
+                      Content="曲名 (title) 内の [～] を除去する"
+                      Checked="MessageFields_Changed" Unchecked="MessageFields_Changed"/>
+
+            <TextBlock Grid.Row="14" Grid.Column="0" Text="プレビュー" VerticalAlignment="Top" Margin="0,8"/>
+            <TextBlock Grid.Row="14" Grid.Column="1" x:Name="PreviewText" TextWrapping="Wrap" Margin="0,8"
+                       Foreground="Gray" FontSize="11" Text="—"/>
+
+            <StackPanel Grid.Row="15" Grid.Column="1" Orientation="Horizontal"
+                        HorizontalAlignment="Right" Margin="0,14,0,0">
+                <Button Content="OK" Width="90" Margin="0,0,8,0" IsDefault="True" Click="Ok_Click"/>
+                <Button Content="キャンセル" Width="90" IsCancel="True"/>
+            </StackPanel>
         </Grid>
-
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="ポーリング間隔 (秒)" VerticalAlignment="Center" Margin="0,6"/>
-        <TextBox   Grid.Row="2" Grid.Column="1" x:Name="PollBox" Margin="0,6" Width="120" HorizontalAlignment="Left"/>
-
-        <TextBlock Grid.Row="3" Grid.Column="0" Text="Socket.IO URL" VerticalAlignment="Center" Margin="0,6"/>
-        <TextBox   Grid.Row="3" Grid.Column="1" x:Name="NpUrlBox" Margin="0,6" VerticalAlignment="Center"/>
-        <TextBlock Grid.Row="4" Grid.Column="1" x:Name="NpUrlHint" Foreground="Gray" FontSize="11"
-                   TextWrapping="Wrap" Margin="0,0,0,4"
-                   Text="空欄 = config.json の localSocketPort から自動検出"/>
-
-        <TextBlock Grid.Row="5" Grid.Column="0" Text="VRChat ホスト" VerticalAlignment="Center" Margin="0,6"/>
-        <TextBox   Grid.Row="5" Grid.Column="1" x:Name="HostBox" Margin="0,6" Width="200" HorizontalAlignment="Left"/>
-
-        <TextBlock Grid.Row="6" Grid.Column="0" Text="VRChat ポート" VerticalAlignment="Center" Margin="0,6"/>
-        <TextBox   Grid.Row="6" Grid.Column="1" x:Name="PortBox" Margin="0,6" Width="120" HorizontalAlignment="Left"/>
-
-        <CheckBox Grid.Row="7" Grid.Column="1" x:Name="NotificationCheck" Margin="0,8,0,0"
-                  Content="Chatbox 通知音を鳴らす (/chatbox/input 第3引数)"/>
-        <CheckBox Grid.Row="8" Grid.Column="1" x:Name="IndicatorCheck" Margin="0,8,0,0"
-                  Content="入力中インジケーター (/chatbox/typing) を送る"/>
-        <CheckBox Grid.Row="9" Grid.Column="1" x:Name="ShowLabelCheck" Margin="0,8,0,0"
-                  Content="label フィールドの [～] を表示する"/>
-        <CheckBox Grid.Row="10" Grid.Column="1" x:Name="StripBracketsCheck" Margin="0,8,0,0"
-                  Content="曲名 (title) 内の [～] を除去する"/>
-
-        <StackPanel Grid.Row="12" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
-            <Button Content="OK"       Width="90" Margin="0,0,8,0" IsDefault="True" Click="Ok_Click"/>
-            <Button Content="キャンセル" Width="90" IsCancel="True"/>
-        </StackPanel>
-    </Grid>
+    </ScrollViewer>
 </Window>

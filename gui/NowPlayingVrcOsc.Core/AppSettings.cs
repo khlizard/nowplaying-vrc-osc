@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace NowPlayingVrcOsc.Core;
 
@@ -15,8 +16,32 @@ public class AppSettings
     public int VrcPort { get; set; } = 9000;
     public bool ChatboxNotification { get; set; } = false;
     public bool ChatboxIndicator { get; set; } = false;
-    public bool ShowLabel { get; set; } = false;
+
+    // Chatbox メッセージ
+    public string MsgHeader { get; set; } = "🎵";
+    public string MsgSeparator { get; set; } = "-";
+    public bool MsgIncludeTitle { get; set; } = true;
+    public bool MsgIncludeArtist { get; set; } = true;
+    public bool MsgIncludeAlbum { get; set; } = false;
+    public bool MsgIncludeLabel { get; set; } = false;
+    public bool MsgIncludeComment { get; set; } = false;
     public bool StripTitleBrackets { get; set; } = true;
+
+    /// <summary>旧設定。読み込み時に MsgIncludeLabel へマイグレーションする。</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool ShowLabel { get; set; } = false;
+
+    public MessageFormatOptions ToMessageFormat() => new()
+    {
+        Header = MsgHeader,
+        Separator = MsgSeparator,
+        IncludeTitle = MsgIncludeTitle,
+        IncludeArtist = MsgIncludeArtist,
+        IncludeAlbum = MsgIncludeAlbum,
+        IncludeLabel = MsgIncludeLabel,
+        IncludeComment = MsgIncludeComment,
+        StripTitleBrackets = StripTitleBrackets,
+    };
 
     public static string DefaultConfigPath() =>
         Path.Combine(
@@ -35,9 +60,19 @@ public class AppSettings
         try
         {
             var json = File.ReadAllText(path, Encoding.UTF8);
-            return JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+            var settings = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+            MigrateShowLabel(settings, json);
+            return settings;
         }
         catch { return new AppSettings(); }
+    }
+
+    /// <summary>旧 ShowLabel=true を MsgIncludeLabel へ移行（新キーが JSON に無い場合のみ）。</summary>
+    private static void MigrateShowLabel(AppSettings settings, string json)
+    {
+        if (!settings.ShowLabel) return;
+        if (json.Contains("MsgIncludeLabel", StringComparison.Ordinal)) return;
+        settings.MsgIncludeLabel = true;
     }
 
     public void Save()

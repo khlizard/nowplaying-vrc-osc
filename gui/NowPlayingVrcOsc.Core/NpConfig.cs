@@ -43,20 +43,28 @@ public static class NpConfig
             var json = File.ReadAllText(configPath, Encoding.UTF8);
             using var doc = JsonDocument.Parse(json);
             if (!doc.RootElement.TryGetProperty("currentTrack", out var el)) return null;
-            if (el.ValueKind != JsonValueKind.Object) return null;
-            var title = GetString(el, "title");
-            if (string.IsNullOrEmpty(title)) return null;
-            return new TrackInfo(
-                Id: GetString(el, "id"),
-                Title: title,
-                Artist: GetString(el, "artist"),
-                Label: GetString(el, "label")
-            );
+            return ParseTrack(el);
         }
         catch { return null; }
     }
 
-    private static string? GetString(JsonElement el, string property)
+    /// <summary>NP2 トラック JSON オブジェクトを <see cref="TrackInfo"/> に変換する。</summary>
+    public static TrackInfo? ParseTrack(JsonElement el)
+    {
+        if (el.ValueKind != JsonValueKind.Object) return null;
+        var title = GetString(el, "title");
+        if (string.IsNullOrEmpty(title)) return null;
+        return new TrackInfo(
+            Id: GetString(el, "id"),
+            Title: title,
+            Artist: GetString(el, "artist"),
+            Album: GetString(el, "album"),
+            Label: GetString(el, "label"),
+            Comment: GetString(el, "comment")
+        );
+    }
+
+    internal static string? GetString(JsonElement el, string property)
     {
         if (el.TryGetProperty(property, out var val) && val.ValueKind == JsonValueKind.String)
             return val.GetString();

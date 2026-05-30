@@ -66,16 +66,18 @@ GUI の **［設定...］** から変更でき、内容は次に保存されま�
 | VrcPort | `9000` | OSC 送信先ポート |
 | ChatboxNotification | `false` | `/chatbox/input` の通知音 |
 | ChatboxIndicator | `false` | `/chatbox/typing` インジケーター |
-| ShowLabel | `false` | label フィールドの `[～]` 表示 |
-| StripTitleBrackets | `true` | 曲名内の `[～]` を除去 |
+| MsgHeader | `🎵` | Chatbox 先頭のヘッダ（空可） |
+| MsgSeparator | `-` | 表示項目の区切り文字（結合時は前後にスペースが付く。例: `-` → `Title - Artist`） |
+| MsgIncludeTitle / Artist / Album / Label / Comment | title+artist のみ ON | 表示する NP2 フィールド |
+| StripTitleBrackets | `true` | 曲名 (title) 内の `[～]` を除去 |
 
 ## Python 版との挙動一致（parity）
 
 - 取得: `config.json` の `currentTrack` を mtime ポーリング
 - 起動時の現在曲は送信しない（初回は baseline 記録のみ）
 - 重複抑制: `currentTrack.id` 優先（無ければ `title`）
-- フォーマット: `Title - Artist`（アーティスト不明時は曲名のみ）
-- Chatbox 文言: `🎵` + 空白 + フォーマット結果
+- Chatbox 文言: ヘッダ + 選択項目を区切りで結合（空項目は省略）
+- 既定: `🎵` + `title` + `-` + `artist`（Python の `NP_MSG_*` と同等）
 - OSC: `/chatbox/input [text, true, notification]`、`/chatbox/typing [bool]`
 
 ## 配布用ビルド（ベータ / BOOTH）

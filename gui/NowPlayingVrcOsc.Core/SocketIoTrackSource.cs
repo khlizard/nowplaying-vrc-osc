@@ -82,24 +82,9 @@ public sealed class SocketIoTrackSource : ITrackSource
             var data = response.GetValue<JsonElement>();
             if (!data.TryGetProperty("args", out var args) || args.GetArrayLength() == 0)
                 return null;
-            var t = args[0];
-            var title = GetString(t, "title");
-            if (string.IsNullOrEmpty(title)) return null;
-            return new TrackInfo(
-                Id: GetString(t, "id"),
-                Title: title,
-                Artist: GetString(t, "artist"),
-                Label: GetString(t, "label")
-            );
+            return NpConfig.ParseTrack(args[0]);
         }
         catch { return null; }
-    }
-
-    private static string? GetString(JsonElement el, string property)
-    {
-        if (el.TryGetProperty(property, out var val) && val.ValueKind == JsonValueKind.String)
-            return val.GetString();
-        return null;
     }
 
     public async ValueTask DisposeAsync()

@@ -21,32 +21,54 @@ public static class TrackFormatter
     public static string RemoveBrackets(string text) =>
         TitleBracketsRegex.Replace(text, "").Trim();
 
-    public static string FormatTrack(TrackInfo track, bool showLabel = false, bool stripTitleBrackets = true)
+    /// <summary>選択フィールドを compact join し、ヘッダを付与する。</summary>
+    public static string FormatChatboxMessage(TrackInfo track, MessageFormatOptions opts)
     {
-        var title = NormalizeField(track.Title);
-        if (stripTitleBrackets && title.Length > 0)
-            title = RemoveBrackets(title);
+        var parts = new List<string>();
+        if (opts.IncludeTitle)
+        {
+            var title = NormalizeField(track.Title);
+            if (opts.StripTitleBrackets && title.Length > 0)
+                title = RemoveBrackets(title);
+            if (title.Length > 0) parts.Add(title);
+        }
+        if (opts.IncludeArtist)
+        {
+            var artist = NormalizeField(track.Artist);
+            if (artist.Length > 0) parts.Add(artist);
+        }
+        if (opts.IncludeAlbum)
+        {
+            var album = NormalizeField(track.Album);
+            if (album.Length > 0) parts.Add(album);
+        }
+        if (opts.IncludeLabel)
+        {
+            var label = NormalizeField(track.Label);
+            if (label.Length > 0) parts.Add(label);
+        }
+        if (opts.IncludeComment)
+        {
+            var comment = NormalizeField(track.Comment);
+            if (comment.Length > 0) parts.Add(comment);
+        }
 
-        var artist = NormalizeField(track.Artist);
-        var label = NormalizeField(track.Label);
-
-        string main;
-        if (title.Length > 0 && artist.Length > 0)
-            main = $"{title} - {artist}";
-        else if (title.Length > 0)
-            main = title;
-        else if (artist.Length > 0)
-            main = artist;
-        else
-            main = "";
-
-        if (label.Length > 0 && showLabel)
-            main = $"{main} [{label}]";
-
-        return main.Trim();
+        var body = string.Join(opts.SeparatorWithSpaces, parts);
+        var header = opts.Header?.Trim() ?? "";
+        if (header.Length == 0) return body;
+        if (body.Length == 0) return header;
+        return $"{header} {body}";
     }
 
-    // Python parity: f"🎵 {format_track(...)}"
-    public static string FormatChatboxMessage(TrackInfo track, bool showLabel = false, bool stripTitleBrackets = true) =>
-        $"🎵 {FormatTrack(track, showLabel, stripTitleBrackets)}";
+    /// <summary>メイン画面プレビュー用（ヘッダなしの本文のみ）。</summary>
+    public static string FormatTrackBody(TrackInfo track, MessageFormatOptions opts)
+    {
+        var withHeader = FormatChatboxMessage(track, opts);
+        var header = opts.Header?.Trim() ?? "";
+        if (header.Length == 0) return withHeader;
+        if (withHeader.StartsWith(header + " ", StringComparison.Ordinal))
+            return withHeader[(header.Length + 1)..];
+        if (withHeader == header) return "";
+        return withHeader;
+    }
 }

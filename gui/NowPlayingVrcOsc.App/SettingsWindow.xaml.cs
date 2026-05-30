@@ -19,6 +19,7 @@ public partial class SettingsWindow : Window
         WindowIcon.TryApply(this);
         Result = current;
         LoadFields(current);
+        UpdatePreview();
     }
 
     private void LoadFields(AppSettings s)
@@ -31,12 +32,64 @@ public partial class SettingsWindow : Window
         PortBox.Text = s.VrcPort.ToString(CultureInfo.InvariantCulture);
         NotificationCheck.IsChecked = s.ChatboxNotification;
         IndicatorCheck.IsChecked = s.ChatboxIndicator;
-        ShowLabelCheck.IsChecked = s.ShowLabel;
+        MsgHeaderBox.Text = s.MsgHeader;
+        MsgSeparatorBox.Text = s.MsgSeparator;
+        IncludeTitleCheck.IsChecked = s.MsgIncludeTitle;
+        IncludeArtistCheck.IsChecked = s.MsgIncludeArtist;
+        IncludeAlbumCheck.IsChecked = s.MsgIncludeAlbum;
+        IncludeLabelCheck.IsChecked = s.MsgIncludeLabel;
+        IncludeCommentCheck.IsChecked = s.MsgIncludeComment;
         StripBracketsCheck.IsChecked = s.StripTitleBrackets;
         UpdateNpUrlHint();
     }
 
-    // 入力中の config.json パスから自動検出される Socket.IO 接続先を表示（接続先の見える化）
+    private AppSettings BuildSettingsFromFields()
+    {
+        var poll = double.TryParse(PollBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var p) && p > 0
+            ? p : 0.5;
+        var port = int.TryParse(PortBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var pt) && pt is >= 1 and <= 65535
+            ? pt : 9000;
+        return new AppSettings
+        {
+            Source = (SourceCombo.SelectedItem as ComboBoxItem)?.Content as string ?? "auto",
+            ConfigPath = ConfigPathBox.Text.Trim(),
+            PollIntervalSeconds = poll,
+            NpUrl = NpUrlBox.Text.Trim(),
+            VrcHost = HostBox.Text.Trim(),
+            VrcPort = port,
+            ChatboxNotification = NotificationCheck.IsChecked == true,
+            ChatboxIndicator = IndicatorCheck.IsChecked == true,
+            MsgHeader = MsgHeaderBox.Text,
+            MsgSeparator = MsgSeparatorBox.Text.Trim(),
+            MsgIncludeTitle = IncludeTitleCheck.IsChecked == true,
+            MsgIncludeArtist = IncludeArtistCheck.IsChecked == true,
+            MsgIncludeAlbum = IncludeAlbumCheck.IsChecked == true,
+            MsgIncludeLabel = IncludeLabelCheck.IsChecked == true,
+            MsgIncludeComment = IncludeCommentCheck.IsChecked == true,
+            StripTitleBrackets = StripBracketsCheck.IsChecked == true,
+        };
+    }
+
+    private void UpdatePreview()
+    {
+        if (PreviewText is null) return;
+        try
+        {
+            var settings = BuildSettingsFromFields();
+            var track = NpConfig.ReadCurrentTrack(settings.ConfigPath);
+            if (track == null)
+            {
+                PreviewText.Text = "（config.json の currentTrack が読めません）";
+                return;
+            }
+            PreviewText.Text = TrackFormatter.FormatChatboxMessage(track, settings.ToMessageFormat());
+        }
+        catch
+        {
+            PreviewText.Text = "（プレビュー不可）";
+        }
+    }
+
     private void UpdateNpUrlHint()
     {
         if (NpUrlHint is null) return;
@@ -44,7 +97,13 @@ public partial class SettingsWindow : Window
         NpUrlHint.Text = $"空欄 = config.json の localSocketPort から自動検出（現在: {auto}）";
     }
 
-    private void ConfigPathBox_TextChanged(object sender, TextChangedEventArgs e) => UpdateNpUrlHint();
+    private void ConfigPathBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        UpdateNpUrlHint();
+        UpdatePreview();
+    }
+
+    private void MessageFields_Changed(object sender, RoutedEventArgs e) => UpdatePreview();
 
     private void SelectSource(string source)
     {
@@ -56,7 +115,7 @@ public partial class SettingsWindow : Window
                 return;
             }
         }
-        SourceCombo.SelectedIndex = 0; // auto
+        SourceCombo.SelectedIndex = 0;
     }
 
     private void Browse_Click(object sender, RoutedEventArgs e)
@@ -93,22 +152,23 @@ public partial class SettingsWindow : Window
             Invalid("VRChat ホストを入力してください。", HostBox);
             return;
         }
-
-        var settings = new AppSettings
+        if (string.IsNullOrWhiteSpace(MsgSeparatorBox.Text))
         {
-            Source = (SourceCombo.SelectedItem as ComboBoxItem)?.Content as string ?? "auto",
-            ConfigPath = ConfigPathBox.Text.Trim(),
-            PollIntervalSeconds = poll,
-            NpUrl = NpUrlBox.Text.Trim(),
-            VrcHost = HostBox.Text.Trim(),
-            VrcPort = port,
-            ChatboxNotification = NotificationCheck.IsChecked == true,
-            ChatboxIndicator = IndicatorCheck.IsChecked == true,
-            ShowLabel = ShowLabelCheck.IsChecked == true,
-            StripTitleBrackets = StripBracketsCheck.IsChecked == true,
-        };
-        settings.Save();
+            Invalid("区切り文字を入力してください。", MsgSeparatorBox);
+            return;
+        }
+        if (IncludeTitleCheck.IsChecked != true &&
+            IncludeArtistCheck.IsChecked != true &&
+            IncludeAlbumCheck.IsChecked != true &&
+            IncludeLabelCheck.IsChecked != true &&
+            IncludeCommentCheck.IsChecked != true)
+        {
+            Invalid("表示する項目を 1 つ以上選んでください。", IncludeTitleCheck);
+            return;
+        }
 
+        var settings = BuildSettingsFromFields();
+        settings.Save();
         Result = settings;
         DialogResult = true;
     }

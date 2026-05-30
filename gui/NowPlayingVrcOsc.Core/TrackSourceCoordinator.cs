@@ -1,6 +1,3 @@
-using System.Text;
-using System.Text.Json;
-
 namespace NowPlayingVrcOsc.Core;
 
 /// <summary>
@@ -70,7 +67,7 @@ public sealed class TrackSourceCoordinator : ITrackSource
                 if (lastMtime == null || mtime != lastMtime)
                 {
                     lastMtime = mtime;
-                    var track = ReadCurrentTrack(_settings.ConfigPath);
+                    var track = NpConfig.ReadCurrentTrack(_settings.ConfigPath);
                     if (track != null) TrackReceived?.Invoke(track);
                 }
             }
@@ -101,35 +98,6 @@ public sealed class TrackSourceCoordinator : ITrackSource
         source.StatusChanged  += s => StatusChanged?.Invoke(s);
         _activeSource = source;
         await source.StartAsync(cancellationToken);
-    }
-
-    // --- config.json パーサ（auto フォールバックループ用） ----------------
-
-    private static TrackInfo? ReadCurrentTrack(string configPath)
-    {
-        try
-        {
-            var json = File.ReadAllText(configPath, Encoding.UTF8);
-            using var doc = JsonDocument.Parse(json);
-            if (!doc.RootElement.TryGetProperty("currentTrack", out var el)) return null;
-            if (el.ValueKind != JsonValueKind.Object) return null;
-            var title = GetString(el, "title");
-            if (string.IsNullOrEmpty(title)) return null;
-            return new TrackInfo(
-                Id: GetString(el, "id"),
-                Title: title,
-                Artist: GetString(el, "artist"),
-                Label: GetString(el, "label")
-            );
-        }
-        catch { return null; }
-    }
-
-    private static string? GetString(JsonElement el, string property)
-    {
-        if (el.TryGetProperty(property, out var val) && val.ValueKind == JsonValueKind.String)
-            return val.GetString();
-        return null;
     }
 
     public async ValueTask DisposeAsync()
