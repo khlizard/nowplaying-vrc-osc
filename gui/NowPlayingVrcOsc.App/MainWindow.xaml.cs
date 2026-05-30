@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using NowPlayingVrcOsc.Core;
 using WinFormsApp = System.Windows.Forms;
@@ -150,7 +151,11 @@ public partial class MainWindow : Window
         if (bridge == null) return;
 
         bridge.Stop();
-        try { await bridge.DisposeAsync(); } catch { }
+        try { await bridge.DisposeAsync(); }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[NowPlayingVrcOsc] Bridge dispose failed: {ex}");
+        }
     }
 
     // --- 閉じる → トレイ格納 ---------------------------------------------
