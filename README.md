@@ -4,6 +4,8 @@
 
 > 本プロジェクトは [Now Playing App](https://nowplayingapp.com)（Triode）の公式ツールではありません。
 
+> GUI 版（Windows）: **DJ Now Playing for VRChat** — 詳細は [`gui/README.md`](gui/README.md)
+
 ## 概要
 
 ```
@@ -124,4 +126,6 @@ python nowplaying-vrc-osc.py --help
 
 ## ライセンス
 
-未設定。利用・再配布する場合は必要に応じてライセンスを追加してください。
+[MIT License](release/LICENCE.txt)（Copyright © 2026 tokage works）
+
+GUI 配布 ZIP には `LICENCE.txt` と `THIRD-PARTY-NOTICES.txt` が同梱されます。

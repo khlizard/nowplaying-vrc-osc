@@ -1,4 +1,7 @@
-# Now Playing → VRChat (GUI 版)
+# DJ Now Playing for VRChat (GUI 版)
+
+**正式名:** DJ Now Playing for VRChat（BOOTH 商品名・配布物表記）  
+**アプリ表示名:** Now Playing → VRChat（ウィンドウ・トレイ・設定画面のタイトル）
 
 [Now Playing App 2 (NP2)](../README.md) の再生中の曲を取得し、VRChat Chatbox へ
 OSC で送る Windows 常駐 GUI アプリです。Python CLI 版
@@ -97,7 +100,7 @@ dist/nowplaying-vrc-osc-gui-v<Version>-win-x64.zip
 | `-SkipZip` | ZIP 作成を省略 |
 
 バージョンは [`Directory.Build.props`](Directory.Build.props) の `<Version>` で管理します。
-同梱 README・ライセンス表記のテンプレートは [`../release/`](../release/) にあります。
+同梱 README・ライセンス（`LICENCE.txt`）・第三者表記のテンプレートは [`../release/`](../release/) にあります。
 BOOTH 公開前の確認項目は [`../release/booth-checklist.ja.md`](../release/booth-checklist.ja.md) を参照。
 
 配布前の確認:

@@ -146,7 +146,8 @@ Copy-Item -Path (Join-Path $PublishDir '*') -Destination $PackageDir -Recurse -F
 
 $readmeTemplate = Join-Path $ReleaseDir 'README.ja.txt'
 $noticesTemplate = Join-Path $ReleaseDir 'THIRD-PARTY-NOTICES.txt'
-foreach ($template in @($readmeTemplate, $noticesTemplate)) {
+$licenceTemplate = Join-Path $ReleaseDir 'LICENCE.txt'
+foreach ($template in @($readmeTemplate, $noticesTemplate, $licenceTemplate)) {
     if (-not (Test-Path -LiteralPath $template)) {
         throw "同梱テンプレートが見つかりません: $template"
     }
@@ -158,6 +159,7 @@ $readmeText = (Get-Content -LiteralPath $readmeTemplate -Raw -Encoding UTF8) `
 $readmeText | Set-Content -LiteralPath (Join-Path $PackageDir 'README.ja.txt') -Encoding UTF8 -NoNewline
 
 Copy-Item -LiteralPath $noticesTemplate -Destination (Join-Path $PackageDir 'THIRD-PARTY-NOTICES.txt') -Force
+Copy-Item -LiteralPath $licenceTemplate -Destination (Join-Path $PackageDir 'LICENCE.txt') -Force
 
 Write-Host ''
 Write-Host '=== [5/6] スモークテスト ==='

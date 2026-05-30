@@ -385,10 +385,11 @@ App の csproj 例:
 
 ## 12. 未決定事項（必要に応じて決める）
 
-| 項目 | 候補 |
+| 項目 | 決定 / 候補 |
 |---|---|
-| アプリ表示名 | `Now Playing → VRChat` / `nowplaying-vrc-osc` |
-| ライセンス | Python 版同様「未設定」→ GUI 版で MIT 等を検討 |
+| 正式名（BOOTH・配布物） | **DJ Now Playing for VRChat** |
+| アプリ表示名（ウィンドウ・トレイ） | **Now Playing → VRChat** |
+| ライセンス | **MIT**（[`release/LICENCE.txt`](../../release/LICENCE.txt)） |
 | Python 版との設定共有 | 非対応（`.env` と `settings.json` は別） |
 | 自動起動（Windows スタートアップ） | Phase 4 以降 |
 

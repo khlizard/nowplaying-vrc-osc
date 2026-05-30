@@ -1,7 +1,9 @@
 THIRD-PARTY NOTICES
-Now Playing → VRChat
+DJ Now Playing for VRChat
 
-This application includes third-party software components.
+This application is licensed under the MIT License.
+See LICENCE.txt in the distribution package for the full text.
+
 The following notices are provided for attribution and compliance purposes.
 
 

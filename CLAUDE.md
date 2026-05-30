@@ -9,7 +9,7 @@
 | 構成 | パス | 状態 |
 |---|---|---|
 | Python CLI 版 | `nowplaying-vrc-osc.py` | v1 完成（参照実装） |
-| C# Windows GUI 版 | `gui/`（未作成） | **これから開発** |
+| C# Windows GUI 版 | `gui/` | v1 ベータ（**DJ Now Playing for VRChat**） |
 | ドキュメント | `docs/` | NP2 / VRChat OSC / GUI 計画 |
 
 ---
