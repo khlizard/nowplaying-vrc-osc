@@ -88,8 +88,8 @@ GUI v2 から曲の取得元は rekordbox の `master.db` に変わった（計�
 | パス | 用途 |
 |---|---|
 | [`docs/nowplaying-vrc-osc-gui/plan.ja.md`](docs/nowplaying-vrc-osc-gui/plan.ja.md) | **GUI 開発計画（主参照）** |
-| [`docs/now-playing-app/external-connection.ja.md`](docs/now-playing-app/external-connection.ja.md) | NP2 接続（ファイル監視 / Socket.IO） |
-| [`docs/vrc_osc_ja/osc-as-input-controller.md`](docs/vrc_osc_ja/osc-as-input-controller.md) | Chatbox OSC |
+| `refs/now-playing-app/external-connection.ja.md` | NP2 接続（ファイル監視 / Socket.IO）。ローカルのみ |
+| `refs/vrc_osc_ja/osc-as-input-controller.md` | Chatbox OSC。ローカルのみ |
 | [`README.md`](README.md) | Python CLI 版の使い方 |
 
 ---
@@ -102,6 +102,7 @@ GUI v2 から曲の取得元は rekordbox の `master.db` に変わった（計�
 4. **コミット** — ユーザーが明示的に依頼したときのみ。コミットメッセージは **日本語**。
 5. **`.env` をコミットしない** — 機密含む可能性あり。`.env.example` を更新する。
 6. **テスト** — Phase 1 完了時点で Python 版と同環境（NP2 起動）での手動 parity 確認を行う。
+7. **外部ドキュメントは `refs/` に置く** — VRChat や NP2 など他者のドキュメントのコピー・和訳は `refs/`（`.gitignore` 対象）に置き、コミットしない。公開ドキュメントからは公式 URL を参照する。
 
 ---
 

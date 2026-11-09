@@ -55,7 +55,7 @@ NP2 の Socket.IO ポートは `config.json` の `localSocketPort`、または�
 1. アクションメニュー → **Osc** → **Enabled** をオン
 2. 外部プログラムからの送信先は既定で **UDP 9000**
 
-詳細は [`docs/vrc_osc_ja/osc-overview.md`](docs/vrc_osc_ja/osc-overview.md) を参照。
+詳細は VRChat 公式ドキュメントの [OSC Overview](https://docs.vrchat.com/docs/osc-overview) を参照。
 
 ## 使い方
 
@@ -108,11 +108,10 @@ python nowplaying-vrc-osc.py --help
 
 | パス | 内容 |
 |---|---|
-| [`docs/now-playing-app/external-connection.ja.md`](docs/now-playing-app/external-connection.ja.md) | NP2 への外部接続（ファイル監視 / Socket.IO API） |
 | [`docs/nowplaying-vrc-osc-gui/plan.ja.md`](docs/nowplaying-vrc-osc-gui/plan.ja.md) | **C# Windows GUI 版 開発計画** |
 | [`CLAUDE.md`](CLAUDE.md) | Claude Code 向け作業指示（計画書参照） |
-| [`docs/vrc_osc_ja/`](docs/vrc_osc_ja/) | VRChat OSC ドキュメント（日本語） |
-| [`docs/vrc_osc/`](docs/vrc_osc/) | VRChat OSC ドキュメント（英語原文） |
+| [VRChat OSC（公式）](https://docs.vrchat.com/docs/osc-overview) | VRChat の OSC 仕様 |
+| [Now Playing App](https://nowplayingapp.com) | NP2 公式サイト |
 
 ## トラブルシューティング
 

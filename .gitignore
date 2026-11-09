@@ -92,3 +92,6 @@ config.local.*
 dist/
 *.exe
 *.zip
+
+# 参照用の外部ドキュメント（VRChat / Now Playing App など。再配布しない）
+refs/

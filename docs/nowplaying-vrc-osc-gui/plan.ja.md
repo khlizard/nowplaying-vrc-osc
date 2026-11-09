@@ -50,7 +50,7 @@ Now Playing App 2
 | **Socket.IO（フォールバック）** | config が無い／読めない場合。`trackUpdate` / `animate` | 副経路 |
 | **auto** | config 優先 → 失敗時 Socket.IO | CLI/GUI 既定 |
 
-詳細: [`docs/now-playing-app/external-connection.ja.md`](../now-playing-app/external-connection.ja.md)
+詳細: `refs/now-playing-app/external-connection.ja.md`（ローカル参照用。リポジトリには含めない）
 
 #### config.json 監視の要点
 
@@ -105,7 +105,7 @@ Now Playing App 2
 | `/chatbox/input` | `[text, true, notification]` — 即時送信、第3引数=通知 SE |
 | `/chatbox/typing` | インジケーター ON/OFF（送信前後、`indicator=true` 時のみ） |
 
-詳細: [`docs/vrc_osc_ja/osc-as-input-controller.md`](../vrc_osc_ja/osc-as-input-controller.md)
+詳細: `refs/vrc_osc_ja/osc-as-input-controller.md`（ローカル参照用）、公式: https://docs.vrchat.com/docs/osc-as-input-controller
 
 ### 2.6 設定一覧（Python 版 `.env` = GUI 版で移植）
 
@@ -233,8 +233,6 @@ now-playing-osc/                    # 既存リポジトリ
 ├── nowplaying-vrc-osc.py           # Python CLI 版（v1 完成）
 ├── .env.example
 ├── docs/
-│   ├── now-playing-app/            # NP2 接続ドキュメント
-│   ├── vrc_osc_ja/                 # VRChat OSC ドキュメント
 │   └── nowplaying-vrc-osc-gui/     # ← 本計画書
 │       └── plan.ja.md
 └── gui/                            # C# 新規（別スレッドで作成）
@@ -361,9 +359,9 @@ App の csproj 例:
 | パス | 内容 |
 |---|---|
 | [`README.md`](../../README.md) | Python CLI 版の使い方 |
-| [`docs/now-playing-app/external-connection.ja.md`](../now-playing-app/external-connection.ja.md) | NP2 外部接続（ファイル監視 / Socket.IO） |
-| [`docs/vrc_osc_ja/osc-as-input-controller.md`](../vrc_osc_ja/osc-as-input-controller.md) | Chatbox OSC |
-| [`docs/vrc_osc_ja/osc-overview.md`](../vrc_osc_ja/osc-overview.md) | OSC 概要 |
+| `refs/now-playing-app/external-connection.ja.md` | NP2 外部接続（ファイル監視 / Socket.IO）。ローカル参照用 |
+| `refs/vrc_osc_ja/osc-as-input-controller.md` | Chatbox OSC。ローカル参照用（公式: https://docs.vrchat.com/docs/osc-as-input-controller） |
+| `refs/vrc_osc_ja/osc-overview.md` | OSC 概要。ローカル参照用（公式: https://docs.vrchat.com/docs/osc-overview） |
 
 ---
 
