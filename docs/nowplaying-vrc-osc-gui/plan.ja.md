@@ -318,7 +318,7 @@ Python 版と **同一リポジトリ**、`docs/` を共有。
 ## 8. ソリューション作成コマンド（Phase 1 着手用）
 
 ```powershell
-cd "D:\dev\2026.05 now-playing-osc"
+cd "D:\dev\202605_now-playing-osc"
 
 mkdir gui
 cd gui

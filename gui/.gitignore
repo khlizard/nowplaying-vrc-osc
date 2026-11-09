@@ -6,3 +6,6 @@ obj/
 .vs/
 .idea/
 *.user
+
+# WPF ビルド時の一時プロジェクト
+*_wpftmp.csproj
