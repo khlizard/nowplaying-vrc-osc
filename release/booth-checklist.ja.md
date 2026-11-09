@@ -6,8 +6,12 @@
 
 - [x] `.\gui\scripts\publish-release.ps1` で ZIP を生成した
 - [ ] .NET **未インストール**の PC で解凍・起動確認した
-- [x] NP2 + VRChat で曲切替・テスト送信を確認した
+- [ ] rekordbox + VRChat で曲の送信（ローカル曲・Spotify 曲）とテスト送信を確認した
+- [ ] rekordbox 終了後、`master.db` のフォルダに `-wal`/`-shm` が残っていないことを確認した
 - [ ] 単一 exe で問題があれば `-Format Folder` で再生成した
+- [ ] `.\gui\scripts\publish-installer.ps1` で Setup.exe を生成し、インストール・起動・アンインストールを確認した
+- [ ] `NPVO_UPDATE_FEED` で、旧版から新版への自動更新を確認した
+- [ ] `-Upload` で GitHub Releases に公開した（リポジトリが public であること）
 - [x] `release/README.ja.txt` の「連絡先」を記入した
 - [x] `gui/Directory.Build.props` の Company / Copyright を BOOTH 表記と揃えた
 
@@ -16,7 +20,8 @@
 - [ ] 商品名: **DJ Now Playing for VRChat**（アプリ内表示名は Now Playing → VRChat）
 - [ ] 概要・非公式ツールである旨の免責
 - [ ] 動作環境（Windows 10/11 64bit、.NET 不要）
-- [ ] 必要ソフト（NP2、VRChat OSC 有効）
+- [ ] 必要ソフト（rekordbox 7、VRChat OSC 有効）
+- [ ] 送信が「再生時間設定」の秒数だけ遅れること、Spotify 曲は曲名のみであること
 - [ ] 使い方（解凍 → exe 起動 → 開始）
 - [ ] SmartScreen 警告への対処方法
 - [ ] スクリーンショット（メイン画面・設定・トレイ・Chatbox 表示例）

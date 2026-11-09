@@ -395,4 +395,49 @@ App の csproj 例:
 
 ---
 
-*最終更新: Python CLI v1 完成時点の計画を統合。*
+## 13. v2: rekordbox master.db 直読み
+
+GUI v2.0.0-beta から、曲の取得元を NP2 から **rekordbox の `master.db`** に切り替えた。NP2 経由の取得（config.json / Socket.IO）は GUI からは削除した。NP2 を使う場合は Python CLI 版か GUI v1.x を使う。Python CLI 版は変更していない。
+
+参考にした実装:
+
+- `202611_rekordbox-nowplaying-viewer`（`src/rnv/watcher/`, `src/rnv/spotify/oembed.py`）
+- `202611_rekordbox-setlist-recorder`（`src/rsr/rb/`, `docs/rekordbox-history.md`）
+
+### 13.1 取得の流れ
+
+1. DB パスを決める: 設定 `DbPathOverride` → `%APPDATA%\Pioneer\rekordboxAgent\storage\options.json` の `db-path` → `%APPDATA%\Pioneer\rekordbox\master.db`（`RekordboxPaths`）
+2. `master.db-wal` がなければ開かない（rekordbox 未起動。読み取り専用で開いても `-wal`/`-shm` が作られて残るため）
+3. `master.db` と `-wal` の mtime・サイズが変わったときだけ読む
+4. `file:///…?mode=ro` で開き、`PRAGMA cipher='sqlcipher'; PRAGMA legacy=4; PRAGMA key='<64hex>'` を送る。読み取りは `BEGIN…COMMIT` で囲み、毎回閉じる（`MasterDb`）
+5. `djmdSongHistory` の rowid カーソルで新しい再生を検出する（`HistoryCursor`）。起動後最初の読み取りは基準位置を決めるだけで送らない
+6. `djmdContent` と `djmdArtist`/`djmdAlbum`/`djmdLabel` から `TrackInfo` を作る。`TrackInfo.Id` は `djmdContent.ID`
+7. Spotify 曲（`FolderPath` が `spotify:track:<22文字>`、曲名が `$A7:v1:…` の暗号化値）は、Spotify oEmbed で曲名だけ取得する。取得できなければ送らない
+8. 以降は v1 と同じ（重複抑制 → `TrackFormatter` → OSC 送信）
+
+### 13.2 復号キー
+
+`KeyResolver` が次の順で探す。どの候補も、実際に `master.db` を開けたときだけ採用する。
+
+1. `%AppData%\NowPlayingVrcOsc\key.dpapi`（DPAPI で暗号化したキャッシュ）
+2. 公開ソース（`Rekordbox/default-key-sources.json` にある固定コミットの URL）から 64 桁の hex を抽出する。見つからなければ 10 分間は再試行しない
+3. 設定画面での手入力（検証してから 1. に保存する）
+
+options.json の `dp` を Blowfish で復号する経路は、rekordbox 7.2 で失敗するため実装していない。
+
+### 13.3 守ること
+
+- `master.db` に書き込まない。書き込み SQL、`rekey`・`journal_mode`・`wal_checkpoint` などの PRAGMA を使わない
+- DB を開くのは `MasterDb` だけにする
+- 復号キーをログ・画面・例外メッセージに出さない
+- テストに実 DB を使わない（`NowPlayingVrcOsc.Core.Tests` は自作の暗号化 DB を使う）
+
+### 13.4 制約
+
+- rekordbox は「再生時間設定」（環境設定 > 詳細 > ブラウズ）の秒数だけ再生してから履歴を書く。送信はその分遅れる
+- 履歴にデッキ情報はない。最新の履歴行を再生中とみなす
+- Spotify 曲はアーティストを取得しない（oEmbed が返さないため）
+
+---
+
+*最終更新: GUI v2（rekordbox master.db 直読み）を §13 に追加。*

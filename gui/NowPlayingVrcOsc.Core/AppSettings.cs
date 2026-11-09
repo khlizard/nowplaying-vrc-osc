@@ -6,12 +6,9 @@ namespace NowPlayingVrcOsc.Core;
 
 public class AppSettings
 {
-    public string Source { get; set; } = "auto";
-    public string ConfigPath { get; set; } = DefaultConfigPath();
-    public double PollIntervalSeconds { get; set; } = 0.5;
-
-    // Socket.IO 接続先 URL。空のときは config.json の localSocketPort から自動検出。
-    public string NpUrl { get; set; } = "";
+    // rekordbox master.db のパス。空のときは自動検出（RekordboxPaths.ResolveDbPath）。
+    public string DbPathOverride { get; set; } = "";
+    public double PollIntervalSeconds { get; set; } = 1.0;
     public string VrcHost { get; set; } = "127.0.0.1";
     public int VrcPort { get; set; } = 9000;
     public bool ChatboxNotification { get; set; } = false;
@@ -42,11 +39,6 @@ public class AppSettings
         IncludeComment = MsgIncludeComment,
         StripTitleBrackets = StripTitleBrackets,
     };
-
-    public static string DefaultConfigPath() =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            ".nowplaying", "config.json");
 
     public static string SettingsPath() =>
         Path.Combine(

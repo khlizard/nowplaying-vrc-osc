@@ -4,12 +4,12 @@
 
 ## プロジェクト概要
 
-**Now Playing App 2（NP2）** から再生中の曲情報を取得し、**VRChat Chatbox** へ OSC で送る非公式ブリッジ。
+再生中の曲情報を取得し、**VRChat Chatbox** へ OSC で送る非公式ブリッジ。
 
-| 構成 | パス | 状態 |
-|---|---|---|
-| Python CLI 版 | `nowplaying-vrc-osc.py` | v1 完成（参照実装） |
-| C# Windows GUI 版 | `gui/` | v1 ベータ（**DJ Now Playing for VRChat**） |
+| 構成 | パス | 取得元 | 状態 |
+|---|---|---|---|
+| Python CLI 版 | `nowplaying-vrc-osc.py` | Now Playing App 2（NP2） | v1 完成（参照実装） |
+| C# Windows GUI 版 | `gui/` | rekordbox の `master.db` を直接読む | v2 ベータ（**DJ Now Playing for VRChat**） |
 | ドキュメント | `docs/` | NP2 / VRChat OSC / GUI 計画 |
 
 ---
@@ -58,26 +58,28 @@
 | ランタイム | **.NET 10（LTS）** |
 | Core TFM | `net10.0` |
 | App TFM | `net10.0-windows`（WPF） |
-| パターン | MVVM |
-| config 監視 | mtime ポーリング（watchdog 不使用） |
-| OSC | `OscCore` 等 |
-| Socket.IO | Phase 4（`SocketIOClient`） |
+| パターン | コードビハインド（MVVM は未導入） |
+| master.db 監視 | `master.db` と `-wal` の mtime・サイズをポーリング |
+| master.db 読み取り | `Microsoft.Data.Sqlite.Core` + `SQLite3MC.PCLRaw.bundle`（SQLCipher 4 互換） |
+| Spotify 曲名 | Spotify oEmbed（認証不要） |
+| OSC | 自前実装（`OscSender`） |
+| テスト | `gui/NowPlayingVrcOsc.Core.Tests`（xUnit） |
 
 ---
 
 ## parity 確認（Python 版と一致させること）
 
-C# 実装は [`nowplaying-vrc-osc.py`](nowplaying-vrc-osc.py) と **同じ結果** を出すこと。計画書 §2 および以下を特に守る:
+GUI v2 から曲の取得元は rekordbox の `master.db` に変わった（計画書 §13）。取得以外のフォーマットと OSC 送信は [`nowplaying-vrc-osc.py`](nowplaying-vrc-osc.py) と **同じ結果** を出すこと。以下を特に守る:
 
-1. **取得:** 既定は config.json ポーリング、`auto` で Socket.IO フォールバック
+1. **取得（GUI v2）:** `master.db` を読み取り専用でポーリングする。書き込み SQL・`rekey`/`journal_mode`/`wal_checkpoint` などの PRAGMA は使わない。`-wal` がないときは開かない。復号キーをログや画面に出さない（計画書 §13）
 2. **起動時:** 現在再生中の曲は **表示・送信しない**
-3. **重複抑制:** `currentTrack.id` 優先
+3. **重複抑制:** 曲 ID を優先する（GUI v2 は `djmdContent.ID`、Python 版は `currentTrack.id`）
 4. **フォーマット:** `Title - Artist`（アーティスト不明時は曲名のみ）
 5. **レーベル:** `ShowLabel=false` 既定（`true` のときのみ `[label]`）
 6. **曲名内 `[～]`:** `StripTitleBrackets=true` 既定で除去
 7. **Chatbox 文言:** `🎵 Now Playing: {format_track の結果}`
 8. **OSC:** `/chatbox/input [text, true, notification]`、インジケーターは `/chatbox/typing`
-9. **機密:** NP2 `config.json` は `currentTrack` のみ使用。全体をログ出力しない
+9. **機密:** Python 版は NP2 `config.json` の `currentTrack` のみ使用し、全体をログ出力しない
 
 ---
 

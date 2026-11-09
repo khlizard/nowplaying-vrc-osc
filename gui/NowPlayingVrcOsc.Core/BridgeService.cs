@@ -1,17 +1,19 @@
+using NowPlayingVrcOsc.Core.Rekordbox;
+
 namespace NowPlayingVrcOsc.Core;
 
 public sealed class BridgeService : IAsyncDisposable
 {
     private readonly AppSettings _settings;
     private readonly TrackDeduplicator _deduplicator = new();
-    private readonly Action<string> _coordinatorStatusChangedHandler;
+    private readonly Action<string> _sourceStatusChangedHandler;
     private CancellationTokenSource? _cts;
     private VrcChatboxSender? _sender;
-    private TrackSourceCoordinator? _coordinator;
+    private RekordboxTrackSource? _source;
 
     public event Action<TrackInfo>? TrackChanged;
     public event Action<string>? MessageSent;
-    /// <summary>ソース切替・接続状態の変化（UI 表示用）。バックグラウンドスレッドから呼ばれる。</summary>
+    /// <summary>接続状態の変化（UI 表示用）。バックグラウンドスレッドから呼ばれる。</summary>
     public event Action<string>? StatusChanged;
 
     public bool IsRunning => _cts != null && !_cts.IsCancellationRequested;
@@ -19,35 +21,30 @@ public sealed class BridgeService : IAsyncDisposable
     public BridgeService(AppSettings settings)
     {
         _settings = settings;
-        _coordinatorStatusChangedHandler = s => StatusChanged?.Invoke(s);
+        _sourceStatusChangedHandler = s => StatusChanged?.Invoke(s);
     }
 
     public async Task StartAsync()
     {
         if (IsRunning) return;
-        await DisposeCoordinatorAsync().ConfigureAwait(false);
+        await DisposeSourceAsync().ConfigureAwait(false);
 
         _deduplicator.Reset();
 
-        // Socket.IO は接続時に NP2 が現在曲を push しない。
-        // config.json の currentTrack をベースラインとしてシードし、初回スキップを無効化する。
-        // （auto かつ config.json が存在しない場合も同様）
-        bool socketIoFromStart = _settings.Source == "socketio" ||
-            (_settings.Source != "config" && !File.Exists(_settings.ConfigPath));
-        if (socketIoFromStart)
-            _deduplicator.Seed(NpConfig.ReadCurrentTrack(_settings.ConfigPath));
+        // rekordbox ソースは起動時点の曲を通知しないので、最初の新規再生をそのまま送る。
+        _deduplicator.Seed(null);
 
         _cts = new CancellationTokenSource();
         _sender = new VrcChatboxSender(
             _settings.VrcHost, _settings.VrcPort,
             _settings.ChatboxNotification, _settings.ChatboxIndicator);
 
-        var coordinator = new TrackSourceCoordinator(_settings);
-        coordinator.TrackReceived += OnTrackReceived;
-        coordinator.StatusChanged += _coordinatorStatusChangedHandler;
-        _coordinator = coordinator;
+        var source = new RekordboxTrackSource(_settings);
+        source.TrackReceived += OnTrackReceived;
+        source.StatusChanged += _sourceStatusChangedHandler;
+        _source = source;
 
-        await coordinator.StartAsync(_cts.Token).ConfigureAwait(false);
+        await source.StartAsync(_cts.Token).ConfigureAwait(false);
     }
 
     private void OnTrackReceived(TrackInfo track)
@@ -80,17 +77,17 @@ public sealed class BridgeService : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         Stop();
-        await DisposeCoordinatorAsync().ConfigureAwait(false);
+        await DisposeSourceAsync().ConfigureAwait(false);
     }
 
-    private async ValueTask DisposeCoordinatorAsync()
+    private async ValueTask DisposeSourceAsync()
     {
-        var coordinator = _coordinator;
-        _coordinator = null;
-        if (coordinator == null) return;
+        var source = _source;
+        _source = null;
+        if (source == null) return;
 
-        coordinator.TrackReceived -= OnTrackReceived;
-        coordinator.StatusChanged -= _coordinatorStatusChangedHandler;
-        await coordinator.DisposeAsync().ConfigureAwait(false);
+        source.TrackReceived -= OnTrackReceived;
+        source.StatusChanged -= _sourceStatusChangedHandler;
+        await source.DisposeAsync().ConfigureAwait(false);
     }
 }

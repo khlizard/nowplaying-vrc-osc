@@ -38,32 +38,29 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="取得方式 (Source)" VerticalAlignment="Center" Margin="0,6"/>
-            <ComboBox  Grid.Row="0" Grid.Column="1" x:Name="SourceCombo" Margin="0,6" Width="160" HorizontalAlignment="Left">
-                <ComboBoxItem Content="auto"/>
-                <ComboBoxItem Content="config"/>
-                <ComboBoxItem Content="socketio"/>
-            </ComboBox>
-
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="config.json パス" VerticalAlignment="Center" Margin="0,6"/>
-            <Grid Grid.Row="1" Grid.Column="1" Margin="0,6">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="master.db" VerticalAlignment="Center" Margin="0,6"/>
+            <Grid Grid.Row="0" Grid.Column="1" Margin="0,6">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" x:Name="ConfigPathBox" VerticalAlignment="Center"
-                         TextChanged="ConfigPathBox_TextChanged"/>
+                <TextBox Grid.Column="0" x:Name="DbPathBox" VerticalAlignment="Center"
+                         TextChanged="DbPathBox_TextChanged"/>
                 <Button  Grid.Column="1" Content="参照..." Width="64" Margin="6,0,0,0" Click="Browse_Click"/>
             </Grid>
+            <TextBlock Grid.Row="1" Grid.Column="1" x:Name="DbPathHint" Foreground="Gray" FontSize="11"
+                       TextWrapping="Wrap" Margin="0,0,0,4"/>
 
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="ポーリング間隔 (秒)" VerticalAlignment="Center" Margin="0,6"/>
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="ポーリング間隔（秒）" VerticalAlignment="Center" Margin="0,6"/>
             <TextBox   Grid.Row="2" Grid.Column="1" x:Name="PollBox" Margin="0,6" Width="120" HorizontalAlignment="Left"/>
 
-            <TextBlock Grid.Row="3" Grid.Column="0" Text="Socket.IO URL" VerticalAlignment="Center" Margin="0,6"/>
-            <TextBox   Grid.Row="3" Grid.Column="1" x:Name="NpUrlBox" Margin="0,6" VerticalAlignment="Center"/>
-            <TextBlock Grid.Row="4" Grid.Column="1" x:Name="NpUrlHint" Foreground="Gray" FontSize="11"
-                       TextWrapping="Wrap" Margin="0,0,0,4"
-                       Text="空欄 = config.json の localSocketPort から自動検出"/>
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="復号キー" VerticalAlignment="Center" Margin="0,6"/>
+            <PasswordBox Grid.Row="3" Grid.Column="1" x:Name="KeyBox" Margin="0,6" VerticalAlignment="Center"/>
+            <StackPanel Grid.Row="4" Grid.Column="1" Margin="0,0,0,4">
+                <TextBlock x:Name="KeyStatusText" Foreground="Gray" FontSize="11" TextWrapping="Wrap"/>
+                <TextBlock Foreground="Gray" FontSize="11" TextWrapping="Wrap"
+                           Text="自動取得できないときだけ入力してください（64 桁の 16 進数）"/>
+            </StackPanel>
 
             <TextBlock Grid.Row="5" Grid.Column="0" Text="VRChat ホスト" VerticalAlignment="Center" Margin="0,6"/>
             <TextBox   Grid.Row="5" Grid.Column="1" x:Name="HostBox" Margin="0,6" Width="200" HorizontalAlignment="Left"/>

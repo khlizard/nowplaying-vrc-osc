@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -7,7 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SocketIOClient" Version="3.1.1" />
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.14" />
+    <PackageReference Include="SQLite3MC.PCLRaw.bundle" Version="2.6.1" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Rekordbox\default-key-sources.json" LogicalName="default-key-sources.json" />
+    <InternalsVisibleTo Include="NowPlayingVrcOsc.Core.Tests" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Reflection;
 using System.Windows;
 using NowPlayingVrcOsc.Core;
 using WinFormsApp = System.Windows.Forms;
@@ -17,12 +18,52 @@ public partial class MainWindow : Window
     private BridgeService? _bridge;
     private WinFormsApp.NotifyIcon? _trayIcon;
     private bool _exiting;
+    private readonly AppUpdater _updater = new();
 
     public MainWindow()
     {
         InitializeComponent();
         WindowIcon.TryApply(this);
         InitTray();
+        VersionText.Text = GetVersionText();
+        ContentRendered += async (_, _) => await CheckUpdateAsync();
+    }
+
+    // --- バージョン表示 / 自動更新 ---------------------------------------
+
+    private static string GetVersionText()
+    {
+        var v = typeof(MainWindow).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        if (string.IsNullOrEmpty(v)) return "";
+        var plus = v.IndexOf('+');
+        if (plus >= 0) v = v[..plus];
+        return "v" + v;
+    }
+
+    private async Task CheckUpdateAsync()
+    {
+        var asset = await _updater.CheckAndDownloadAsync();
+        if (asset == null || _exiting) return;
+        await Dispatcher.InvokeAsync(() =>
+        {
+            UpdateText.Text = $"新しいバージョン {asset.Version} を取得しました。アプリを終了すると更新されます。";
+            UpdatePanel.Visibility = Visibility.Visible;
+        });
+    }
+
+    private async void UpdateButton_Click(object sender, RoutedEventArgs e)
+    {
+        var r = MessageBox.Show(this, "監視を停止して更新し、再起動します。よろしいですか？",
+            "Now Playing → VRChat", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (r != MessageBoxResult.Yes || _exiting) return;
+        _exiting = true;
+        await CleanupAsync();
+        _updater.ApplyAndRestart();
+
+        // 成功時は ApplyAndRestart の中でプロセスが終わる。戻ってきたら適用に失敗しているので、
+        // トレイも監視も止まった状態で残さないよう、通常どおり終了する（更新は次回起動時に適用される）。
+        Application.Current.Shutdown();
     }
 
     // --- トレイ常駐 -------------------------------------------------------
@@ -57,6 +98,17 @@ public partial class MainWindow : Window
         if (_exiting) return;
         _exiting = true;
 
+        await CleanupAsync();
+
+        // 更新が取得済みなら終了後に適用（再起動はしない）
+        _updater.ApplyOnExit();
+
+        // Close() は Window_Closing から再入するとハング/例外になるため呼ばない
+        Application.Current.Shutdown();
+    }
+
+    private async Task CleanupAsync()
+    {
         try
         {
             await StopAndDisposeBridgeAsync();
@@ -72,9 +124,6 @@ public partial class MainWindow : Window
             _trayIcon.Dispose();
             _trayIcon = null;
         }
-
-        // Close() は Window_Closing から再入するとハング/例外になるため呼ばない
-        Application.Current.Shutdown();
     }
 
     // --- Bridge 開始 / 停止 ----------------------------------------------

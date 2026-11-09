@@ -13,7 +13,18 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <StartupObject>NowPlayingVrcOsc.App.App</StartupObject>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Velopack" Version="1.2.161" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- VelopackApp.Run() を最初に呼ぶため、独自 Main を使う -->
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Include="App.xaml" />
+  </ItemGroup>
 
   <ItemGroup>
     <Resource Include="Assets\app.ico" />

@@ -4,7 +4,7 @@
 
 > 本プロジェクトは [Now Playing App](https://nowplayingapp.com)（Triode）の公式ツールではありません。
 
-> GUI 版（Windows）: **DJ Now Playing for VRChat** — 詳細は [`gui/README.md`](gui/README.md)
+> GUI 版（Windows）: **DJ Now Playing for VRChat** — v2 から NP2 を使わず rekordbox の `master.db` を直接読みます。詳細は [`gui/README.md`](gui/README.md)
 
 ## 概要
 

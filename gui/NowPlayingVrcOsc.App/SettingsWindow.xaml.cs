@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using NowPlayingVrcOsc.Core;
+using NowPlayingVrcOsc.Core.Rekordbox;
 using MessageBox = System.Windows.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 
@@ -24,10 +25,8 @@ public partial class SettingsWindow : Window
 
     private void LoadFields(AppSettings s)
     {
-        SelectSource(s.Source);
-        ConfigPathBox.Text = s.ConfigPath;
+        DbPathBox.Text = s.DbPathOverride;
         PollBox.Text = s.PollIntervalSeconds.ToString(CultureInfo.InvariantCulture);
-        NpUrlBox.Text = s.NpUrl;
         HostBox.Text = s.VrcHost;
         PortBox.Text = s.VrcPort.ToString(CultureInfo.InvariantCulture);
         NotificationCheck.IsChecked = s.ChatboxNotification;
@@ -40,7 +39,8 @@ public partial class SettingsWindow : Window
         IncludeLabelCheck.IsChecked = s.MsgIncludeLabel;
         IncludeCommentCheck.IsChecked = s.MsgIncludeComment;
         StripBracketsCheck.IsChecked = s.StripTitleBrackets;
-        UpdateNpUrlHint();
+        UpdateDbPathHint();
+        UpdateKeyStatus();
     }
 
     private AppSettings BuildSettingsFromFields()
@@ -51,10 +51,8 @@ public partial class SettingsWindow : Window
             ? pt : 9000;
         return new AppSettings
         {
-            Source = (SourceCombo.SelectedItem as ComboBoxItem)?.Content as string ?? "auto",
-            ConfigPath = ConfigPathBox.Text.Trim(),
+            DbPathOverride = DbPathBox.Text.Trim(),
             PollIntervalSeconds = poll,
-            NpUrl = NpUrlBox.Text.Trim(),
             VrcHost = HostBox.Text.Trim(),
             VrcPort = port,
             ChatboxNotification = NotificationCheck.IsChecked == true,
@@ -76,12 +74,8 @@ public partial class SettingsWindow : Window
         try
         {
             var settings = BuildSettingsFromFields();
-            var track = NpConfig.ReadCurrentTrack(settings.ConfigPath);
-            if (track == null)
-            {
-                PreviewText.Text = "（config.json の currentTrack が読めません）";
-                return;
-            }
+            var track = new TrackInfo("sample", "Sample Title [Extended Mix]", "Sample Artist",
+                "Sample Album", "Sample Label", "Sample Comment");
             PreviewText.Text = TrackFormatter.FormatChatboxMessage(track, settings.ToMessageFormat());
         }
         catch
@@ -90,49 +84,44 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private void UpdateNpUrlHint()
+    private void UpdateDbPathHint()
     {
-        if (NpUrlHint is null) return;
-        var auto = NpConfig.ResolveNpUrl(null, ConfigPathBox.Text?.Trim() ?? "");
-        NpUrlHint.Text = $"空欄 = config.json の localSocketPort から自動検出（現在: {auto}）";
+        if (DbPathHint is null) return;
+        var auto = RekordboxPaths.ResolveDbPath(DbPathBox.Text?.Trim());
+        DbPathHint.Text = $"空欄なら自動検出: {auto}";
     }
 
-    private void ConfigPathBox_TextChanged(object sender, TextChangedEventArgs e)
+    private void UpdateKeyStatus()
     {
-        UpdateNpUrlHint();
-        UpdatePreview();
+        if (KeyStatusText is null) return;
+        var saved = false;
+        try { saved = new DpapiKeyStore(DpapiKeyStore.DefaultPath()).Load() != null; }
+        catch { /* 読み取り失敗は未保存扱い */ }
+        KeyStatusText.Text = saved ? "保存済みのキーがあります" : "未保存（通常は自動取得されます）";
+    }
+
+    private void DbPathBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        UpdateDbPathHint();
     }
 
     private void MessageFields_Changed(object sender, RoutedEventArgs e) => UpdatePreview();
-
-    private void SelectSource(string source)
-    {
-        foreach (ComboBoxItem item in SourceCombo.Items)
-        {
-            if ((string)item.Content == source)
-            {
-                SourceCombo.SelectedItem = item;
-                return;
-            }
-        }
-        SourceCombo.SelectedIndex = 0;
-    }
 
     private void Browse_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new OpenFileDialog
         {
-            Title = "NP2 config.json を選択",
-            Filter = "config.json|config.json|JSON ファイル|*.json|すべてのファイル|*.*",
+            Title = "rekordbox の master.db を選択",
+            Filter = "master.db|master.db|SQLite DB (*.db)|*.db|すべて (*.*)|*.*",
             CheckFileExists = false,
         };
-        if (!string.IsNullOrWhiteSpace(ConfigPathBox.Text))
+        if (!string.IsNullOrWhiteSpace(DbPathBox.Text))
         {
-            try { dlg.InitialDirectory = Path.GetDirectoryName(ConfigPathBox.Text); }
+            try { dlg.InitialDirectory = Path.GetDirectoryName(DbPathBox.Text); }
             catch { /* 無効なパスは無視 */ }
         }
         if (dlg.ShowDialog(this) == true)
-            ConfigPathBox.Text = dlg.FileName;
+            DbPathBox.Text = dlg.FileName;
     }
 
     private void Ok_Click(object sender, RoutedEventArgs e)
@@ -165,6 +154,46 @@ public partial class SettingsWindow : Window
         {
             Invalid("表示する項目を 1 つ以上選んでください。", IncludeTitleCheck);
             return;
+        }
+
+        var key = KeyBox.Password.Trim();
+        if (key.Length > 0)
+        {
+            var dbPath = RekordboxPaths.ResolveDbPath(DbPathBox.Text.Trim());
+            var check = RekordboxKeyVerifier.Verify(dbPath, key);
+            switch (check)
+            {
+                case KeyCheckResult.Ok:
+                    break;
+                case KeyCheckResult.InvalidFormat:
+                    Invalid("復号キーは 64 桁の 16 進数で入力してください。", KeyBox);
+                    return;
+                case KeyCheckResult.WrongKey:
+                    Invalid("このキーでは master.db を開けませんでした。", KeyBox);
+                    return;
+                default:
+                    var reason = check switch
+                    {
+                        KeyCheckResult.DbNotFound => "master.db が見つかりません",
+                        KeyCheckResult.Busy => "rekordbox がデータベースを使用中です",
+                        _ => "読み取りエラー",
+                    };
+                    var answer = MessageBox.Show(this,
+                        $"master.db でキーを確認できませんでした（{reason}）。このまま保存しますか？",
+                        "設定", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    if (answer != MessageBoxResult.Yes) return;
+                    break;
+            }
+            try
+            {
+                new DpapiKeyStore(DpapiKeyStore.DefaultPath()).Save(key);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, $"復号キーを保存できませんでした: {ex.Message}", "設定",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
         }
 
         var settings = BuildSettingsFromFields();
