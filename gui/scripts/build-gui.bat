@@ -9,14 +9,12 @@ for %%I in ("%SCRIPT_DIR%..") do set "GUI_DIR=%%~fI"
 for %%I in ("%GUI_DIR%\..") do set "REPO_ROOT=%%~fI"
 
 set "ICON_PNG=%REPO_ROOT%\resources\icon1024.png"
-if not exist "%ICON_PNG%" set "ICON_PNG=%REPO_ROOT%\docs\icon1024.png"
 
 echo.
 echo === [1/4] app.ico を生成 ===
 if not exist "%ICON_PNG%" (
     echo エラー: icon1024.png が見つかりません。
     echo   %REPO_ROOT%\resources\icon1024.png
-    echo   %REPO_ROOT%\docs\icon1024.png
     exit /b 1
 )
 

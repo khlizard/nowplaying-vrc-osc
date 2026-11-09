@@ -18,6 +18,17 @@ The following notices are provided for attribution and compliance purposes.
 
 
 ================================================================================
+Windows Presentation Foundation (WPF) / Windows Forms
+================================================================================
+
+  Component : WPF and Windows Forms (included in self-contained deployment)
+  License   : MIT License
+  Copyright : .NET Foundation and Contributors
+  https://github.com/dotnet/wpf
+  https://github.com/dotnet/winforms
+
+
+================================================================================
 Microsoft.Data.Sqlite
 ================================================================================
 

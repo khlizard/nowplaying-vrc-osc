@@ -1,49 +1,48 @@
-# BOOTH 公開前チェックリスト
+# リリース前チェックリスト
 
-作者向け。ベータ配布後、BOOTH で ZIP 公開する前に確認してください。
+作者向け。新しいバージョンを GitHub Releases（インストーラー）と BOOTH（ZIP）に公開する前に確認する。
+リリースのたびにチェックを外してから使う。
 
-## 配布物
+## 準備
 
-- [x] `.\gui\scripts\publish-release.ps1` で ZIP を生成した
-- [ ] .NET **未インストール**の PC で解凍・起動確認した
-- [ ] rekordbox + VRChat で曲の送信（ローカル曲・Spotify 曲）とテスト送信を確認した
-- [ ] rekordbox 終了後、`master.db` のフォルダに `-wal`/`-shm` が残っていないことを確認した
-- [ ] 単一 exe で問題があれば `-Format Folder` で再生成した
-- [ ] `.\gui\scripts\publish-installer.ps1` で Setup.exe を生成し、インストール・起動・アンインストールを確認した
-- [ ] `NPVO_UPDATE_FEED` で、旧版から新版への自動更新を確認した
-- [ ] `-Upload` で GitHub Releases に公開した（リポジトリが public であること）
-- [x] `release/README.ja.txt` の「連絡先」を記入した
-- [x] `gui/Directory.Build.props` の Company / Copyright を BOOTH 表記と揃えた
+- [ ] `gui/Directory.Build.props` の `<Version>` を上げた
+- [ ] 使い方・設定・通信が変わった場合、`README.md`、`gui/README.md`、`docs/design.ja.md`、`release/README.ja.txt` を直した
+- [ ] `release/notes/<Version>.md` にリリースノートを書いた（任意）
+- [ ] `cd gui; dotnet test NowPlayingVrcOsc.Core.Tests` が通った
 
-## BOOTH 商品ページ
+## 動作確認
 
-- [ ] 商品名: **DJ Now Playing for VRChat**（アプリ内表示名は Now Playing → VRChat）
-- [ ] 概要・非公式ツールである旨の免責
-- [ ] 動作環境（Windows 10/11 64bit、.NET 不要）
-- [ ] 必要ソフト（rekordbox 7、VRChat OSC 有効）
-- [ ] 送信が「再生時間設定」の秒数だけ遅れること、Spotify 曲は曲名のみであること
-- [ ] 使い方（解凍 → exe 起動 → 開始）
-- [ ] SmartScreen 警告への対処方法
-- [ ] スクリーンショット（メイン画面・設定・トレイ・Chatbox 表示例）
-- [ ] 価格（無料 / 名義価格）
-- [ ] バージョン番号の明記
+- [ ] rekordbox + VRChat で、ローカル曲と Spotify 曲の送信、テスト送信を確認した
+- [ ] アプリ起動時に再生中の曲が送られないことを確認した
+- [ ] rekordbox を終了したあと、`master.db` のフォルダに `-wal` / `-shm` が残っていないことを確認した
 
-## 法務・ライセンス
+## インストーラー（GitHub Releases）
 
-- [x] [LICENCE.txt](LICENCE.txt)（MIT License, Copyright tokage works）
-- [ ] BOOTH 説明文にライセンス（MIT）への言及
-- [x] `THIRD-PARTY-NOTICES.txt` が ZIP に同梱されている（publish スクリプト）
-- [x] `LICENCE.txt` が ZIP に同梱されている（publish スクリプト）
+- [ ] `.\gui\scripts\publish-installer.ps1` で Setup.exe を作り、インストール・起動・アンインストールを確認した
+- [ ] `NPVO_UPDATE_FEED` に `dist\velopack` を指定し、前の版から新しい版への自動更新を確認した
+- [ ] `.\gui\scripts\publish-installer.ps1 -Upload` で公開した（タグ `gui-v<Version>` は自動で作られる）
+- [ ] GitHub Releases のページで、Setup.exe と Portable.zip が添付されていることを確認した
 
-## 任意
+## ZIP（BOOTH）
 
-- [ ] コード署名（SmartScreen 警告の軽減。有料）
-- [x] `git tag gui-v1.1.0-beta` でリリースポイントを固定
-- [ ] 更新時: Version を上げて ZIP を差し替え
+- [ ] `.\gui\scripts\publish-release.ps1` で ZIP を作った（単一 exe で問題があれば `-Format Folder`）
+- [ ] .NET が入っていない PC で、解凍・起動を確認した
+- [ ] ZIP に `README.ja.txt`、`LICENCE.txt`、`THIRD-PARTY-NOTICES.txt` が入っている
+- [ ] BOOTH の ZIP を差し替え、商品ページのバージョン表記を更新した
 
-## 継続リリース手順
+## ライセンス
 
-1. バグ修正・機能追加
-2. `gui/Directory.Build.props` の `<Version>` を更新
-3. `.\gui\scripts\publish-release.ps1` を実行
-4. 動作確認後、BOOTH の ZIP を差し替え
+- [ ] `LICENCE.txt` と ルートの `LICENSE` が同じ内容で、MIT の本文が崩れていない
+- [ ] 依存パッケージを変えた場合、`THIRD-PARTY-NOTICES.txt` の名前・バージョン・ライセンスを直した
+
+## BOOTH 商品ページ（初回、または内容が変わったとき）
+
+- [ ] 商品名: **DJ Now Playing for VRChat**（アプリ内の表示名は Now Playing → VRChat）
+- [ ] 非公式ツールである旨の免責（rekordbox / AlphaTheta、VRChat、Spotify）
+- [ ] 動作環境（Windows 10/11 64bit、.NET 不要、rekordbox 7、VRChat の OSC 有効）
+- [ ] 送信が「再生時間設定」の秒数だけ遅れること、Spotify の曲は曲名だけであること
+- [ ] 通信の説明（復号キーの自動取得、Spotify の曲名取得、インストーラー版の更新確認）
+- [ ] 使い方（解凍 → exe 起動 → 開始）と、SmartScreen 警告への対処
+- [ ] インストーラー版（GitHub Releases）への案内
+- [ ] ライセンス（MIT）への言及
+- [ ] スクリーンショット（メイン画面・設定・トレイ・Chatbox の表示例）

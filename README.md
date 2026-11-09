@@ -1,130 +1,86 @@
-# nowplaying-vrc-osc
+# DJ Now Playing for VRChat
 
-**Now Playing App 2** から再生中の曲情報を取得し、**VRChat** の Chatbox へ OSC で表示する非公式ブリッジです。
+rekordbox で再生した曲を、VRChat の Chatbox に `🎵 Title - Artist` の形で表示する Windows アプリです。
+rekordbox のデータベース（`master.db`）を読み取り専用で直接読み、OSC で VRChat に送ります。
 
-> 本プロジェクトは [Now Playing App](https://nowplayingapp.com)（Triode）の公式ツールではありません。
+> rekordbox（AlphaTheta）、VRChat、Spotify の公式ツールではありません。自己責任でご利用ください。
 
-> GUI 版（Windows）: **DJ Now Playing for VRChat** — v2 から NP2 を使わず rekordbox の `master.db` を直接読みます。詳細は [`gui/README.md`](gui/README.md)
+## 必要なもの
 
-## 概要
+- Windows 10 / 11（64bit）
+- rekordbox 7
+- VRChat（OSC を有効にしておく）
 
-```
-Now Playing App 2
- ├── config.json (currentTrack)  ── poll（既定）──┐
- └── Socket.IO :<ポート>  ── fallback ──────────┤
-                                                 ▼
-                                    nowplaying-vrc-osc.py
-                                                 │
-                                                 ▼  /chatbox/input
-                                    VRChat (OSC UDP)
-```
+.NET のインストールは不要です（アプリに同梱しています）。
 
-DJ ソフト（RekordBox、Serato、Traktor、Pro DJ Link 等）から NP2 が取得した曲名・アーティスト名を、VRC のチャットボックスに `🎵 Now Playing: Title - Artist` 形式で送ります（アーティスト不明時は曲名のみ）。同じ曲が続く間は再送信しません（`currentTrack.id` で判定）。
+## 入手
 
-## 必要環境
-
-- Python 3.10 以上（推奨）
-- [Now Playing App 2](https://nowplayingapp.com)
-- VRChat（OSC 有効化済み）
-
-## セットアップ
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-接続先は `.env.example` を参考に環境変数で指定できます（任意）。
-
-| 変数 | 既定値 | 説明 |
+| 形式 | 入手先 | 自動更新 |
 |---|---|---|
-| `NP_SOURCE` | `auto` | 取得方式: `auto` / `config` / `socketio` |
-| `NP_CONFIG_PATH` | `~/.nowplaying/config.json` | NP2 の config.json パス |
-| `NP_POLL_INTERVAL` | `0.5` | config.json 監視間隔（秒） |
-| `NP_URL` | config から自動 → `http://localhost:9000` | Socket.IO URL（フォールバック時） |
-| `VRC_OSC_HOST` | `127.0.0.1` | VRChat OSC 送信先 |
-| `VRC_OSC_PORT` | `9000` | VRChat OSC 受信ポート |
-| `NP_SHOW_LABEL` | `false` | `label` フィールドの `[～]` を表示（`true` のときのみ） |
-| `NP_STRIP_TITLE_BRACKETS` | `true` | 曲名（`title`）内の `[～]` を除去 |
+| インストーラー（`NowPlayingVrcOsc-win-Setup.exe`） | [GitHub Releases](https://github.com/khlizard/nowplaying-vrc-osc/releases) | あり |
+| ZIP | [BOOTH](https://tokageworks.booth.pm/) | なし |
 
-NP2 の Socket.IO ポートは `config.json` の `localSocketPort`、またはアプリ UI / `GET /config` で確認できます。
-
-## VRChat 側の設定
-
-1. アクションメニュー → **Osc** → **Enabled** をオン
-2. 外部プログラムからの送信先は既定で **UDP 9000**
-
-詳細は VRChat 公式ドキュメントの [OSC Overview](https://docs.vrchat.com/docs/osc-overview) を参照。
+インストーラー版は `%LocalAppData%\NowPlayingVrcOsc` に入ります。管理者権限は要りません。
+コード署名をしていないため、初回起動時に SmartScreen の警告が出ることがあります。「詳細情報」→「実行」で起動できます。
 
 ## 使い方
 
-### 通常モード（NP2 → VRChat）
+1. VRChat でアクションメニュー → **Osc** → **Enabled** をオンにする。
+2. rekordbox を起動する。
+3. アプリを起動して **［開始］** を押す。
+4. rekordbox が履歴に曲を記録すると、Chatbox に送られる。
 
-```powershell
-python nowplaying-vrc-osc.py
-```
+- アプリを起動した時点で再生中の曲は送りません。
+- rekordbox は「再生時間設定」（環境設定 > 詳細 > ブラウズ）の秒数だけ再生してから履歴に記録します。送信はその分遅れます。
+- 同じ曲が続けて記録されたときは送り直しません。
+- **［テスト送信］** で、VRChat に届くかを確認できます。
+- 最小化するとトレイに入り、監視は続きます。× で閉じるとアプリが終了します。
 
-NP2 を起動し、曲が変わるたびに Chatbox へ送信します。既定では `%USERPROFILE%\.nowplaying\config.json` を監視します。
+### Spotify の曲
 
-### テスト: NP2 からの受信のみ
+rekordbox 上の Spotify の曲は、曲名が暗号化されています。
+このときは曲名だけを Spotify から取得して送ります。アーティストは送りません。
 
-```powershell
-python nowplaying-vrc-osc.py --receive-only
-```
+## 設定
 
-曲情報をコンソールに表示します。VRChat には送信しません。
+**［設定...］** で次の項目を変えられます。
 
-### テスト: VRChat への送信のみ
+- `master.db` の場所（空欄なら自動で探します）
+- 復号キー（自動で取得できないときだけ入力します）
+- 確認の間隔、OSC の送信先（既定 `127.0.0.1:9000`）、通知音、入力中インジケーター
+- Chatbox の文面: ヘッダ、区切り文字、表示する項目（曲名・アーティスト・アルバム・レーベル・コメント）、曲名の `[～]` を除くか
 
-```powershell
-python nowplaying-vrc-osc.py --send-only
-python nowplaying-vrc-osc.py --send-only -m "接続テスト"
-```
+設定は `%AppData%\NowPlayingVrcOsc\settings.json` に保存されます。
 
-NP2 に接続せず、テストメッセージを 1 回送信します。OSC 設定の確認に使えます。
+## 通信とデータの扱い
 
-### オプション一覧
+- `master.db` には書き込みません。
+- `master.db` の復号キーは、公開されている情報から自動で取得します（GitHub への通信があります）。取得したキーは Windows の DPAPI で暗号化して `%AppData%\NowPlayingVrcOsc\key.dpapi` に保存します。
+- Spotify の曲名を取得するときは、Spotify にトラック ID を送ります。
+- インストーラー版は、起動時に GitHub Releases で新しい版を確認します。
+- インストーラー版をアンインストールすると、設定と復号キーも削除します。ZIP 版をやめるときは `%AppData%\NowPlayingVrcOsc` を手で削除してください。
 
-```
-python nowplaying-vrc-osc.py --help
-```
+## うまく動かないとき
 
-| オプション | 説明 |
+| 状態欄の表示・症状 | 確認すること |
 |---|---|
-| `--receive-only` | NP2 受信テスト |
-| `--send-only` | VRChat 送信テスト |
-| `-m`, `--message` | `--send-only` 時の送信テキスト |
-| `--source` | `auto`（既定）/ `config` / `socketio` |
-| `--np-config-path` | config.json のパス |
-| `--poll-interval` | config 監視間隔（秒） |
-| `--np-url` | Socket.IO URL |
-| `--vrc-host` | VRChat OSC ホスト |
-| `--vrc-port` | VRChat OSC ポート |
-| `--show-label` / `--no-show-label` | `label` フィールドの `[～]` 表示 / 非表示（既定: 非表示） |
-| `--strip-title-brackets` / `--no-strip-title-brackets` | 曲名内の `[～]` 除去 / 残す |
+| 「rekordbox の起動を待っています」 | rekordbox を起動する |
+| 「master.db が見つかりません」 | ［設定...］で `master.db` の場所を指定する |
+| 「復号キーを取得できません」 | インターネット接続を確認する。または［設定...］の「復号キー」に入力する |
+| 「曲名を取得できませんでした（Spotify）」 | Spotify から曲名を取得できなかった。その曲は送らない |
+| 曲が送られない | 再生時間設定の秒数より長く再生したか。rekordbox の履歴に記録されているか |
+| VRChat に表示されない | OSC が有効か。［テスト送信］を試す |
 
-## ドキュメント
+## ソースからビルドする
 
-| パス | 内容 |
-|---|---|
-| [`docs/nowplaying-vrc-osc-gui/plan.ja.md`](docs/nowplaying-vrc-osc-gui/plan.ja.md) | **C# Windows GUI 版 開発計画** |
-| [`CLAUDE.md`](CLAUDE.md) | Claude Code 向け作業指示（計画書参照） |
-| [VRChat OSC（公式）](https://docs.vrchat.com/docs/osc-overview) | VRChat の OSC 仕様 |
-| [Now Playing App](https://nowplayingapp.com) | NP2 公式サイト |
+ビルド、テスト、配布物の作り方は [`gui/README.md`](gui/README.md) を参照してください。
+仕組みの説明は [`docs/design.ja.md`](docs/design.ja.md) にあります。
 
-## トラブルシューティング
+## 旧 CLI 版（Python）
 
-| 症状 | 確認すること |
-|---|---|
-| 曲が更新されない | NP2 が起動しているか。DJ ソフト側で曲がロード／再生されているか |
-| config 監視が動かない | `%USERPROFILE%\.nowplaying\config.json` が存在するか。`--np-config-path` を確認 |
-| Socket.IO にフォールバックされる | config.json のパスが正しいか。`--source config` で強制監視を試す |
-| VRChat に表示されない | OSC が有効か。`--send-only` で送信テスト |
-| ポート不一致 | `config.json` の `localSocketPort` を確認。`--np-url http://localhost:<ポート>` を指定 |
+Now Playing App 2 と連携する Python のコマンドライン版もあります。[`docs/python-cli.ja.md`](docs/python-cli.ja.md) を参照してください。
 
 ## ライセンス
 
-[MIT License](release/LICENCE.txt)（Copyright © 2026 tokage works）
-
-GUI 配布 ZIP には `LICENCE.txt` と `THIRD-PARTY-NOTICES.txt` が同梱されます。
+[MIT License](LICENSE)（Copyright © 2026 tokage works）
+使用しているライブラリのライセンスは [`release/THIRD-PARTY-NOTICES.txt`](release/THIRD-PARTY-NOTICES.txt) にあります。

@@ -108,10 +108,7 @@ Write-Host ''
 Write-Host '=== [2/8] app.ico を生成 ==='
 $iconPng = Join-Path $RepoRoot 'resources\icon1024.png'
 if (-not (Test-Path -LiteralPath $iconPng)) {
-    $iconPng = Join-Path $RepoRoot 'docs\icon1024.png'
-}
-if (-not (Test-Path -LiteralPath $iconPng)) {
-    throw "icon1024.png が見つかりません: resources/ または docs/"
+    throw "icon1024.png が見つかりません: resources/"
 }
 & $IconScript -InputPath $iconPng
 if (-not (Test-Path -LiteralPath $IconPath)) {

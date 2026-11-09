@@ -4,161 +4,104 @@
 
 ## プロジェクト概要
 
-再生中の曲情報を取得し、**VRChat Chatbox** へ OSC で送る非公式ブリッジ。
+**DJ Now Playing for VRChat**: rekordbox で再生した曲を、VRChat の Chatbox へ OSC で送る Windows アプリ。
+rekordbox の `master.db` を読み取り専用で直接読む。
 
-| 構成 | パス | 取得元 | 状態 |
-|---|---|---|---|
-| Python CLI 版 | `nowplaying-vrc-osc.py` | Now Playing App 2（NP2） | v1 完成（参照実装） |
-| C# Windows GUI 版 | `gui/` | rekordbox の `master.db` を直接読む | v2 ベータ（**DJ Now Playing for VRChat**） |
-| ドキュメント | `docs/` | NP2 / VRChat OSC / GUI 計画 |
+| 構成 | パス | 状態 |
+|---|---|---|
+| GUI 版（C# / WPF） | `gui/` | v2.0.0-beta。主に開発する対象 |
+| 旧 CLI 版（Python） | `nowplaying-vrc-osc.py` | Now Playing App 2 連携。保守のみ |
+| 設計メモ | `docs/design.ja.md` | GUI 版の仕組みと、守ること |
 
----
+## 仕様の正
 
-## 最重要: 開発計画の参照
+1. 実装（`gui/`）
+2. [`docs/design.ja.md`](docs/design.ja.md)
 
-**C# GUI 版の作業を始める前に、必ず次のファイルを読むこと:**
+GUI 版の作業を始める前に `docs/design.ja.md` を読む。設計を変えたら同じ作業の中で design を直す。
 
-[`docs/nowplaying-vrc-osc-gui/plan.ja.md`](docs/nowplaying-vrc-osc-gui/plan.ja.md)
+## 作業スコープ
 
-この計画書が **仕様・フェーズ・アーキテクチャの正** です。本 `CLAUDE.md` は要約と作業ルールのみ。詳細は計画書を参照し、計画書と矛盾する判断をしないこと。
+- **GUI 版**: 新規コードは `gui/NowPlayingVrcOsc.Core/`（UI に依存しない処理）、`gui/NowPlayingVrcOsc.App/`（画面・トレイ・更新）、`gui/NowPlayingVrcOsc.Core.Tests/` に置く。
+- **旧 CLI 版**: ユーザーが明示的に依頼しない限り変更しない。設定の正は [`.env.example`](.env.example)、説明は [`docs/python-cli.ja.md`](docs/python-cli.ja.md)。
+- `refs/` は外部の参照ドキュメント（VRChat OSC、Now Playing App など）のローカル置き場。Git 管理外で、再配布しない。
 
-計画書に含まれる主な内容:
+## 技術スタック（GUI 版）
 
-- Python 版 v1 からの移植仕様（取得方式、フォーマット、OSC、設定）
-- .NET 10 / WPF / Core+App 構成
-- Phase 0〜4 の開発手順
-- リポジトリ構成、`dotnet new` コマンド
-- 別セッション用プロンプト例
-
----
-
-## 作業スコープの切り分け
-
-### Python CLI 版（`nowplaying-vrc-osc.py`）
-
-- 既存の完成版。**ユーザーが明示的に依頼しない限り変更しない。**
-- 挙動の疑問・parity 確認時は **参照実装** として読む。
-- 設定の正: [`.env.example`](.env.example)
-
-### C# GUI 版（`gui/`）
-
-- 計画書 §6 のフェーズに従って進める。
-- **Phase 1:** Core のみ（UI なし）— config 監視 + フォーマット + OSC
-- **Phase 2 以降:** WPF + トレイ + 設定 UI
-- 新規コードは `gui/NowPlayingVrcOsc.Core/`（`net10.0`）と `gui/NowPlayingVrcOsc.App/`（`net10.0-windows`）に置く。
-
----
-
-## 技術スタック（C# GUI 版）
-
-計画書 §3 参照。要点のみ:
-
-| 項目 | 選定 |
+| 項目 | 内容 |
 |---|---|
-| ランタイム | **.NET 10（LTS）** |
-| Core TFM | `net10.0` |
-| App TFM | `net10.0-windows`（WPF） |
-| パターン | コードビハインド（MVVM は未導入） |
-| master.db 監視 | `master.db` と `-wal` の mtime・サイズをポーリング |
-| master.db 読み取り | `Microsoft.Data.Sqlite.Core` + `SQLite3MC.PCLRaw.bundle`（SQLCipher 4 互換） |
-| Spotify 曲名 | Spotify oEmbed（認証不要） |
+| ランタイム | .NET 10。Core / Tests は `net10.0`、App は `net10.0-windows`（WPF。トレイに WinForms を使う） |
+| UI | コードビハインド（MVVM は使わない） |
+| DB | Microsoft.Data.Sqlite.Core + SQLite3MC.PCLRaw.bundle（読み取り専用） |
+| キー保存 | System.Security.Cryptography.ProtectedData（DPAPI） |
+| Spotify 曲名 | oEmbed（`Core/Spotify/`） |
 | OSC | 自前実装（`OscSender`） |
-| テスト | `gui/NowPlayingVrcOsc.Core.Tests`（xUnit） |
+| 更新・インストーラー | Velopack（vpk 1.2.161） |
+| テスト | xUnit |
+| バージョン | `gui/Directory.Build.props` の `<Version>` |
 
----
+## 守ること
 
-## parity 確認（Python 版と一致させること）
+詳しくは `docs/design.ja.md` の「変更するときに守ること」。
 
-GUI v2 から曲の取得元は rekordbox の `master.db` に変わった（計画書 §13）。取得以外のフォーマットと OSC 送信は [`nowplaying-vrc-osc.py`](nowplaying-vrc-osc.py) と **同じ結果** を出すこと。以下を特に守る:
+1. `master.db` に書き込まない。書き込みの SQL や、`rekey`・`journal_mode`・`wal_checkpoint` などの PRAGMA を使わない。DB を開くのは `MasterDb` だけ。
+2. 起動時と再接続時に、その時点の曲を送らない。
+3. 重複抑制は ContentID（`TrackInfo.Id`）優先、無ければ曲名。
+4. 既定のメッセージは `🎵 Title - Artist`（ヘッダ `🎵`、区切り `-`、項目は title と artist）。曲名内の `[～]` は既定で除く。
+5. OSC は `/chatbox/input [text, true, notification]`。インジケーターは `/chatbox/typing`。
+6. 復号キーをログ、画面、例外メッセージに出さない。`settings.json` に保存しない。
+7. テストに実際の `master.db` を使わない。
+8. 新しい外部通信を足したら、README.md、docs/design.ja.md、release/README.ja.txt の通信の説明も直す。
 
-1. **取得（GUI v2）:** `master.db` を読み取り専用でポーリングする。書き込み SQL・`rekey`/`journal_mode`/`wal_checkpoint` などの PRAGMA は使わない。`-wal` がないときは開かない。復号キーをログや画面に出さない（計画書 §13）
-2. **起動時:** 現在再生中の曲は **表示・送信しない**
-3. **重複抑制:** 曲 ID を優先する（GUI v2 は `djmdContent.ID`、Python 版は `currentTrack.id`）
-4. **フォーマット:** `Title - Artist`（アーティスト不明時は曲名のみ）
-5. **レーベル:** `ShowLabel=false` 既定（`true` のときのみ `[label]`）
-6. **曲名内 `[～]`:** `StripTitleBrackets=true` 既定で除去
-7. **Chatbox 文言:** `🎵 Now Playing: {format_track の結果}`
-8. **OSC:** `/chatbox/input [text, true, notification]`、インジケーターは `/chatbox/typing`
-9. **機密:** Python 版は NP2 `config.json` の `currentTrack` のみ使用し、全体をログ出力しない
+## コマンド
 
----
+作業ディレクトリは `gui/`。
 
-## 関連ドキュメント
+```powershell
+dotnet build NowPlayingVrcOsc.slnx
+dotnet test NowPlayingVrcOsc.Core.Tests
+dotnet run --project NowPlayingVrcOsc.App
+```
 
-| パス | 用途 |
+| 用途 | コマンド（リポジトリのルートから） |
 |---|---|
-| [`docs/nowplaying-vrc-osc-gui/plan.ja.md`](docs/nowplaying-vrc-osc-gui/plan.ja.md) | **GUI 開発計画（主参照）** |
-| `refs/now-playing-app/external-connection.ja.md` | NP2 接続（ファイル監視 / Socket.IO）。ローカルのみ |
-| `refs/vrc_osc_ja/osc-as-input-controller.md` | Chatbox OSC。ローカルのみ |
-| [`README.md`](README.md) | Python CLI 版の使い方 |
+| アイコン生成（ImageMagick が必要） | `.\gui\scripts\generate-app-icon.ps1` |
+| アイコン生成 + Debug/Release ビルド | `gui\scripts\build-gui.bat` |
+| 配布 ZIP（BOOTH 用） | `.\gui\scripts\publish-release.ps1` |
+| インストーラー（GitHub Releases 用） | `.\gui\scripts\publish-installer.ps1`（公開は `-Upload`） |
 
----
+`publish-installer.ps1 -Upload` は GitHub Releases に公開し、タグも作る。ユーザーが明示的に依頼したときだけ実行する。
+リリース時の確認項目は [`release/booth-checklist.ja.md`](release/booth-checklist.ja.md)。
+
+## リポジトリ構成
+
+```
+├── README.md                    # 利用者向け（GUI 版）
+├── CLAUDE.md                    # 本ファイル
+├── LICENSE                      # MIT（release/LICENCE.txt と同じ内容）
+├── docs/
+│   ├── design.ja.md             # GUI 版の設計メモ
+│   └── python-cli.ja.md         # 旧 CLI 版の説明
+├── gui/
+│   ├── NowPlayingVrcOsc.slnx
+│   ├── Directory.Build.props    # バージョン・製品名
+│   ├── NowPlayingVrcOsc.Core/   # Rekordbox/, Spotify/, 整形, OSC
+│   ├── NowPlayingVrcOsc.App/    # WPF, トレイ, AppUpdater
+│   ├── NowPlayingVrcOsc.Core.Tests/
+│   ├── scripts/                 # ビルド・配布スクリプト
+│   └── README.md                # 開発者向け
+├── release/                     # 配布物に同梱する README・ライセンス・第三者表記、リリース手順
+├── resources/                   # アイコン（icon.svg が元データ、icon1024.png を生成に使う）
+├── nowplaying-vrc-osc.py        # 旧 CLI 版
+├── .env.example, requirements.txt  # 旧 CLI 版用
+└── refs/                        # 外部ドキュメント（Git 管理外）
+```
 
 ## 作業ルール
 
-1. **計画書ファースト** — C# GUI 作業前に `plan.ja.md` を読む。フェーズを飛ばさない。
-2. **最小スコープ** — 依頼・フェーズ外の変更はしない。Python 版に不用意な diff を入れない。
-3. **既存規約に合わせる** — [.editorconfig](.editorconfig)（Python 4 スペース、Markdown 2 スペース等）に従う。
-4. **コミット** — ユーザーが明示的に依頼したときのみ。コミットメッセージは **日本語**。
-5. **`.env` をコミットしない** — 機密含む可能性あり。`.env.example` を更新する。
-6. **テスト** — Phase 1 完了時点で Python 版と同環境（NP2 起動）での手動 parity 確認を行う。
-7. **外部ドキュメントは `refs/` に置く** — VRChat や NP2 など他者のドキュメントのコピー・和訳は `refs/`（`.gitignore` 対象）に置き、コミットしない。公開ドキュメントからは公式 URL を参照する。
-
----
-
-## フェーズ別: 最初にやること
-
-計画書 §11 参照。
-
-### Phase 0（未実施なら）
-
-- Python 版をコミット・`v1.0.0` タグ（ユーザー依頼時）
-
-### Phase 1（GUI 着手の第一歩）
-
-```powershell
-cd gui
-dotnet new sln -n NowPlayingVrcOsc
-dotnet new classlib -n NowPlayingVrcOsc.Core -f net10.0
-dotnet new wpf -n NowPlayingVrcOsc.App -f net10.0
-dotnet sln add NowPlayingVrcOsc.Core NowPlayingVrcOsc.App
-dotnet add NowPlayingVrcOsc.App reference NowPlayingVrcOsc.Core
-```
-
-その後、計画書 §4.1 の Core モジュールを実装。
-
-### Phase 2 以降
-
-計画書 §6〜§7 に従う。Phase 1 の parity 確認後に GUI を載せる。
-
----
-
-## 典型的な依頼例
-
-ユーザーが次のように依頼した場合、**まず `plan.ja.md` を開き、該当フェーズを確認してから実装する:**
-
-- 「Phase 1 の Core を作って」
-- 「config.json ポーリングを C# で実装して」
-- 「WPF トレイアプリの骨組みを作って」
-- 「Python 版と同じフォーマットで OSC 送信して」
-
----
-
-## リポジトリ構成（目標）
-
-```
-now-playing-osc/
-├── nowplaying-vrc-osc.py          # Python CLI（触らない）
-├── CLAUDE.md                      # 本ファイル
-├── docs/
-│   └── nowplaying-vrc-osc-gui/
-│       └── plan.ja.md             # 開発計画（主参照）
-└── gui/                           # C#（これから）
-    ├── NowPlayingVrcOsc.sln
-    ├── NowPlayingVrcOsc.Core/
-    └── NowPlayingVrcOsc.App/
-```
-
----
-
-*詳細仕様・フェーズ・API 設計はすべて [`docs/nowplaying-vrc-osc-gui/plan.ja.md`](docs/nowplaying-vrc-osc-gui/plan.ja.md) を参照すること。*
+1. **最小スコープ**: 依頼の範囲外は変更しない。旧 CLI 版に不用意な差分を入れない。
+2. **既存の規約に合わせる**: [.editorconfig](.editorconfig) に従う。
+3. **ドキュメントの同期**: 使い方・設定・コマンドが変わったら、README.md、gui/README.md、docs/design.ja.md、release/README.ja.txt のうち該当するものを同じ作業の中で直す。
+4. **コミット**: ユーザーが明示的に依頼したときだけ行う。メッセージは日本語。
+5. **機密**: `.env`、`key.dpapi`、`settings.json`、実際の `master.db`、復号キーをコミットしない。設定例は `.env.example` を更新する。
+6. **検証**: GUI を変更したら `dotnet build` と `dotnet test` を通す。rekordbox や VRChat が必要な動作確認は、実施できなかったら完了報告で明記する。

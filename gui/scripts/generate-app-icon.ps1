@@ -1,21 +1,21 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  docs/icon1024.png から Windows アプリ用の multi-size .ico を生成する。
+  resources/icon1024.png から Windows アプリ用の multi-size .ico を生成する。
 
 .DESCRIPTION
   ImageMagick (magick) を使い、トレイ・タスクバー・exe アイコン向けの
   標準サイズ (16〜256) を 1 つの .ico にまとめる。
 
   既定の入出力:
-    入力:  <repo>/docs/icon1024.png
+    入力:  <repo>/resources/icon1024.png
     出力:  <repo>/gui/NowPlayingVrcOsc.App/Assets/app.ico
 
 .EXAMPLE
   .\gui\scripts\generate-app-icon.ps1
 
 .EXAMPLE
-  .\gui\scripts\generate-app-icon.ps1 -InputPath docs\icon1024.png -OutputPath gui\NowPlayingVrcOsc.App\Assets\app.ico
+  .\gui\scripts\generate-app-icon.ps1 -InputPath resources\icon1024.png -OutputPath gui\NowPlayingVrcOsc.App\Assets\app.ico
 #>
 [CmdletBinding()]
 param(
@@ -47,7 +47,7 @@ https://imagemagick.org/ からインストールするか、PATH に magick を
 $repoRoot = Get-RepoRoot
 
 if (-not $InputPath) {
-    $InputPath = Join-Path $repoRoot 'docs\icon1024.png'
+    $InputPath = Join-Path $repoRoot 'resources\icon1024.png'
 }
 elseif (-not [System.IO.Path]::IsPathRooted($InputPath)) {
     $InputPath = Join-Path $repoRoot $InputPath

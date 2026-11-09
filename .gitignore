@@ -95,3 +95,6 @@ dist/
 
 # 参照用の外部ドキュメント（VRChat / Now Playing App など。再配布しない）
 refs/
+
+# エディタ / AI ツールのローカル設定
+.cursor/

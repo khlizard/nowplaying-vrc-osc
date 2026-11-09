@@ -88,10 +88,7 @@ Write-Host ''
 Write-Host '=== [1/6] app.ico を生成 ==='
 $iconPng = Join-Path $RepoRoot 'resources\icon1024.png'
 if (-not (Test-Path -LiteralPath $iconPng)) {
-    $iconPng = Join-Path $RepoRoot 'docs\icon1024.png'
-}
-if (-not (Test-Path -LiteralPath $iconPng)) {
-    throw "icon1024.png が見つかりません: resources/ または docs/"
+    throw "icon1024.png が見つかりません: resources/"
 }
 & $IconScript -InputPath $iconPng
 
@@ -219,6 +216,6 @@ if (-not $SkipZip) {
 Write-Host ''
 Write-Host '次の確認:'
 Write-Host '  1. .NET 未インストールの PC で ZIP を解凍して起動'
-Write-Host '  2. NP2 + VRChat で曲切替・テスト送信'
+Write-Host '  2. rekordbox + VRChat で曲切替・テスト送信'
 Write-Host '  3. 単一 exe で問題があれば: .\gui\scripts\publish-release.ps1 -Format Folder'
 Write-Host ''

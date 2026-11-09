@@ -5,7 +5,7 @@
 
 rekordbox で再生した曲を、VRChat Chatbox へ OSC で送る Windows 常駐 GUI アプリです。
 rekordbox の `master.db` を読み取り専用で直接読みます（v2 から。Now Playing App 2 は不要）。
-仕組みの詳細は [`docs/nowplaying-vrc-osc-gui/plan.ja.md`](../docs/nowplaying-vrc-osc-gui/plan.ja.md) §13 を参照してください。
+このページは開発者向けです。仕組みの詳細は [`docs/design.ja.md`](../docs/design.ja.md) を参照してください。
 
 ## 必要なもの
 
@@ -13,16 +13,18 @@ rekordbox の `master.db` を読み取り専用で直接読みます（v2 から
 - rekordbox 7
 - VRChat（OSC 有効）
 - ビルドする場合: .NET 10 SDK
+- アイコンを生成する場合: [ImageMagick](https://imagemagick.org/)（`magick` に PATH が通っていること）
 
 ## ビルド・実行
 
-アイコン (`Assets/app.ico`) は `resources/icon1024.png` から生成します（初回または PNG 更新時）:
+アイコン (`Assets/app.ico`) は `resources/icon1024.png` から生成します。
+`icon1024.png` の元データは `resources/icon.svg` です。PNG を更新したら、次を実行します:
 
 ```powershell
-.\gui\scripts\generate-app-icon.ps1 -InputPath resources\icon1024.png
+.\gui\scripts\generate-app-icon.ps1
 ```
 
-`publish-release.ps1` は ZIP を作る前にアイコンを自動で生成します。
+`build-gui.bat`、`publish-release.ps1`、`publish-installer.ps1` は、ビルドの前にアイコンを自動で生成します。
 
 ```powershell
 cd gui
@@ -30,6 +32,10 @@ dotnet build NowPlayingVrcOsc.slnx
 dotnet test NowPlayingVrcOsc.Core.Tests
 dotnet run --project NowPlayingVrcOsc.App
 ```
+
+`gui\scripts\build-gui.bat` を使うと、アイコン生成、実行中のアプリの終了、Debug と Release のビルドをまとめて行います。
+
+テストは Core だけが対象です。実際の `master.db` は使わず、テスト内で作る暗号化 DB と、HTTP の偽装ハンドラーを使います。
 
 ## 使い方
 
@@ -58,7 +64,7 @@ rekordbox 上の Spotify 曲は曲名が暗号化されています。
 
 ### 復号キー
 
-`master.db` は暗号化されています。復号キーは、公開されているソースから自動取得し、
+`master.db` は暗号化されています。復号キーは、公開されている情報から自動取得し（GitHub への通信あり）、
 検証してから `%AppData%\NowPlayingVrcOsc\key.dpapi` に暗号化して保存します（Windows の DPAPI）。
 自動取得できないときは、設定画面の「復号キー」に 64 桁の 16 進数を入力してください。
 
@@ -106,7 +112,8 @@ dotnet tool install -g vpk --version 1.2.161
 | `-SkipDownload` | 前回リリースの取得を省略する（差分パッケージを作らない） |
 | `-Upload` | GitHub Releases に公開する。トークンは `GITHUB_TOKEN` または `gh auth token` |
 
-`release/notes/<Version>.md` があれば、リリースノートとして使います。
+`release/notes/<Version>.md` があれば、リリースノートとして使います（任意。無くても作成できます）。
+`-Upload` を付けると、タグ `gui-v<Version>` も自動で作られます。
 
 更新の動作は、環境変数 `NPVO_UPDATE_FEED` に `dist/velopack` のようなフォルダを指定すると、GitHub の代わりにそのフォルダで試せます。
 
@@ -117,6 +124,8 @@ dotnet tool install -g vpk --version 1.2.161
 ```powershell
 .\gui\scripts\publish-release.ps1
 ```
+
+PowerShell の実行ポリシーで止まる場合は、`gui\scripts\publish-release.bat` から実行できます。
 
 出力: `dist/nowplaying-vrc-osc-gui-v<Version>-win-x64/` と同名の `.zip`
 
