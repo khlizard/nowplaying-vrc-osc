@@ -39,6 +39,8 @@ npm run tauri build -- --no-bundle     # release の exe を作る
 ビルドの出力先は `%LOCALAPPDATA%\nowplaying-vrc-osc\target` です（環境変数 `CARGO_TARGET_DIR` があればそちら）。
 release の exe は `target\release\NowPlayingVrcOsc.exe` にできます。単体で動きます。
 
+GitHub Actions（`.github/workflows/ci.yml`）でも、main への push と pull request のたびに、画面のビルド、整形の確認、Rust のテストを流します。
+
 テストでは実際の `master.db` を使いません。テストの中で暗号化した DB を作り、HTTP は偽物に差し替えます。
 
 ## 配布物を作る

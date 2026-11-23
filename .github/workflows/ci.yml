@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app
+    env:
+      # with-target.mjs はこれがあればそこへビルドする（rust-cache の対象とそろえる）。
+      CARGO_TARGET_DIR: ${{ github.workspace }}\target
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
+        with:
+          toolchain: stable
+          components: rustfmt
+
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: app/src-tauri -> ../../target
+
+      - name: npm ci
+        run: npm ci
+
+      # tauri の generate_context! が dist-web を読むので、Rust より先に作る。
+      - name: 画面の型チェックとビルド
+        run: npm run build
+
+      - name: 整形の確認
+        run: node scripts/with-target.mjs cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+
+      - name: Rust のテスト
+        run: npm run test:rust
