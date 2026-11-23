@@ -7,7 +7,7 @@
 
 - [ ] `app/package.json` と `app/src-tauri/Cargo.toml` の `version` を上げた
 - [ ] 使い方・設定・通信が変わった場合、`README.md`、`app/README.md`、`docs/design.ja.md`、`release/README.ja.txt` を直した
-- [ ] `release/notes/<Version>.md` にリリースノートを書いた（任意）
+- [ ] `CHANGELOG.md` に `## <version>` の節を書いた（インストーラーの更新の説明に使う）
 - [ ] `cd app; npm run test:rust` と `npm run build` が通った
 
 ## 動作確認

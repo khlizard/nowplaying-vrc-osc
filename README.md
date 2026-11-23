@@ -1,9 +1,12 @@
 # DJ Now Playing for VRChat
 
 rekordbox で再生した曲を、VRChat の Chatbox に `🎵 Title - Artist` の形で表示する Windows アプリです。
-rekordbox のデータベース（`master.db`）を読み取り専用で直接読み、OSC で VRChat に送ります。
+rekordbox のデータベース（`master.db`）を読み取り専用で直接読み、OSC で VRChat に送ります。画面は日本語です。
+
+![メイン画面（状態・現在の曲・最終送信と、開始・停止・テスト送信・設定のボタン）と、設定画面（master.db の場所、送信先、Chatbox メッセージの項目とプレビュー）](docs/images/screenshot.png)
 
 > rekordbox（AlphaTheta）、VRChat、Spotify の公式ツールではありません。自己責任でご利用ください。
+> 趣味で作っています。要望に応えられるとは限りません。不具合は [Issues](https://github.com/khlizard/nowplaying-vrc-osc/issues) で知らせてください。
 
 ## 必要なもの
 
@@ -71,6 +74,13 @@ rekordbox 上の Spotify の曲は、曲名が暗号化されています。
 | 曲が送られない | 再生時間設定の秒数より長く再生したか。rekordbox の履歴に記録されているか |
 | VRChat に表示されない | OSC が有効か。［テスト送信］を試す |
 
+## 既知の制限
+
+- 送信は、rekordbox の「再生時間設定」の秒数だけ遅れます。
+- rekordbox の履歴にはデッキの情報がありません。最後に記録された曲を送ります。
+- Spotify の曲は、アーティストを送りません。
+- VRChat の Chatbox は 144 文字までです。アプリでは切り詰めません。
+
 ## ソースからビルドする
 
 ビルド、テスト、配布物の作り方は [`app/README.md`](app/README.md) を参照してください。
@@ -79,6 +89,10 @@ rekordbox 上の Spotify の曲は、曲名が暗号化されています。
 ## 旧 CLI 版（Python）
 
 Now Playing App 2 と連携する Python のコマンドライン版もあります。[`docs/python-cli.ja.md`](docs/python-cli.ja.md) を参照してください。
+
+## 変更履歴
+
+[`CHANGELOG.md`](CHANGELOG.md) を参照してください。
 
 ## ライセンス
 

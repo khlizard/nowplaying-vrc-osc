@@ -12,19 +12,22 @@
 
 ## 準備
 
-このフォルダは Dropbox の中にあります。`node_modules` は、中身を入れる前に同期から外します。
-
 ```powershell
 cd app
+npm install
+```
+
+Dropbox などの同期フォルダの中で開発するときは、`node_modules` を、中身を入れる前に同期から外します（Dropbox の例）。
+
+```powershell
 New-Item -ItemType Directory node_modules
 Set-Content -Path node_modules -Stream com.dropbox.ignored -Value 1
-npm install
 ```
 
 ## ビルドとテスト
 
 cargo は直接実行しません。必ず次の npm スクリプトを使います。
-`scripts/with-target.mjs` が、ビルドの出力先を Dropbox の外にして、exe からユーザー名を含むパスを取り除きます。
+`scripts/with-target.mjs` が、ビルドの出力先をリポジトリの外（同期フォルダの外）にして、exe からユーザー名を含むパスを取り除きます。
 
 ```powershell
 npm run tauri dev                      # 開発用に起動する
@@ -56,7 +59,7 @@ release の exe は `target\release\NowPlayingVrcOsc.exe` にできます。単�
 | `--skip-download` | GitHub Releases から前の版を取得しない（差分パッケージを作らない） |
 | `--upload` | GitHub Releases に公開し、タグ `gui-v<version>` を作る。トークンは `GITHUB_TOKEN` か `gh auth token` |
 
-`release/notes/<version>.md` があれば、リリースノートとして使います。
+リリースノートには、ルートの `CHANGELOG.md` の `## <version>` の節を使います。節が無いと止まります。
 
 ZIP には `release/` の README.ja.txt（`{{VERSION}}` を置き換える）、LICENCE.txt、THIRD-PARTY-NOTICES.txt を同梱します。
 リリース前の確認項目は [`release/booth-checklist.ja.md`](../release/booth-checklist.ja.md) にあります。

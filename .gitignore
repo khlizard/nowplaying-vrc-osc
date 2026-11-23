@@ -96,8 +96,10 @@ dist/
 # 参照用の外部ドキュメント（VRChat / Now Playing App など。再配布しない）
 refs/
 
-# エディタ / AI ツールのローカル設定
+# エディタ / AI ツールのローカル設定・個人のメモ
 .cursor/
+.claude/
+*.local.md
 
 # Tauri 版（app/）。target は with-target.mjs で %LOCALAPPDATA% に出すが、念のため除外する
 app/node_modules/

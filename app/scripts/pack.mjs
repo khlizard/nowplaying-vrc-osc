@@ -8,7 +8,7 @@
 //   npm run pack -- --upload           # GitHub Releases に公開し、タグ gui-v<version> を作る
 // vpk 1.2.161 が必要: dotnet tool install -g vpk --version 1.2.161
 import { spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -48,6 +48,21 @@ function run(command, commandArgs) {
 function step(title) {
   console.log(`\n=== ${title} ===`);
 }
+
+/** CHANGELOG.md の `## <version>` の節の本文。無いか空なら null。 */
+function changelogSection(text, ver) {
+  const lines = text.split(/\r?\n/);
+  const start = lines.findIndex((line) => line.trim() === `## ${ver}`);
+  if (start < 0) return null;
+  const rest = lines.slice(start + 1);
+  const end = rest.findIndex((line) => line.startsWith("## "));
+  const body = (end < 0 ? rest : rest.slice(0, end)).join("\n").trim();
+  return body === "" ? null : `${body}\n`;
+}
+
+// リリースノート（更新の説明）は CHANGELOG.md から取る。書き忘れはビルドの前に止める。
+const notesBody = changelogSection(readFileSync(join(repoRoot, "CHANGELOG.md"), "utf8"), version);
+if (notesBody === null) fail(`CHANGELOG.md に「## ${version}」の節がありません。`);
 
 step("vpk を確認");
 const help = spawnSync("vpk", ["-h"], { encoding: "utf8" });
@@ -102,11 +117,9 @@ const packArgs = [
   "--framework", "webview2",
   "-o", outDir,
 ];
-const notes = join(releaseDir, "notes", `${version}.md`);
-if (existsSync(notes)) {
-  console.log(`リリースノート: ${notes}`);
-  packArgs.push("--releaseNotes", notes);
-}
+const notes = join(base, "release-notes.md");
+writeFileSync(notes, notesBody, "utf8");
+packArgs.push("--releaseNotes", notes);
 if (run("vpk", packArgs) !== 0) fail("vpk pack に失敗しました。");
 
 step("GitHub Releases へアップロード");
