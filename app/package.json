@@ -1,0 +1,23 @@
+{
+  "name": "nowplaying-vrc-osc",
+  "private": true,
+  "version": "3.0.0-beta",
+  "type": "module",
+  "scripts": {
+    "dev": "vite ui",
+    "build": "tsc -p ui --noEmit && vite build ui",
+    "tauri": "node scripts/with-target.mjs tauri",
+    "test:rust": "node scripts/with-target.mjs cargo test --manifest-path src-tauri/Cargo.toml",
+    "pack": "node scripts/pack.mjs",
+    "zip": "node scripts/zip.mjs",
+    "notices": "node scripts/with-target.mjs cargo about generate --manifest-path src-tauri/Cargo.toml -c scripts/notices/about.toml -o ../release/THIRD-PARTY-NOTICES.txt scripts/notices/about.hbs"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.12.5"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.6",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  }
+}

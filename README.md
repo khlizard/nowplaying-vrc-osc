@@ -10,8 +10,7 @@ rekordbox のデータベース（`master.db`）を読み取り専用で直接�
 - Windows 10 / 11（64bit）
 - rekordbox 7
 - VRChat（OSC を有効にしておく）
-
-.NET のインストールは不要です（アプリに同梱しています）。
+- Microsoft Edge WebView2 ランタイム（Windows 11 は標準搭載。インストーラー版は、無ければ自動で入れます）
 
 ## 入手
 
@@ -35,6 +34,7 @@ rekordbox のデータベース（`master.db`）を読み取り専用で直接�
 - 同じ曲が続けて記録されたときは送り直しません。
 - **［テスト送信］** で、VRChat に届くかを確認できます。
 - 最小化するとトレイに入り、監視は続きます。× で閉じるとアプリが終了します。
+- 多重起動はできません。2 つ目を起動すると、起動中のウィンドウが前に出ます。
 
 ### Spotify の曲
 
@@ -73,7 +73,7 @@ rekordbox 上の Spotify の曲は、曲名が暗号化されています。
 
 ## ソースからビルドする
 
-ビルド、テスト、配布物の作り方は [`gui/README.md`](gui/README.md) を参照してください。
+ビルド、テスト、配布物の作り方は [`app/README.md`](app/README.md) を参照してください。
 仕組みの説明は [`docs/design.ja.md`](docs/design.ja.md) にあります。
 
 ## 旧 CLI 版（Python）

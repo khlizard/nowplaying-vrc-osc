@@ -1,7 +1,7 @@
-# DJ Now Playing for VRChat — 設計メモ（GUI v2）
+# DJ Now Playing for VRChat — 設計メモ（v3）
 
-GUI 版の仕組みと、変更するときに守ることをまとめた開発者向けの文書です。
-使い方は [`README.md`](../README.md)、ビルドと配布は [`gui/README.md`](../gui/README.md) を参照してください。
+アプリの仕組みと、変更するときに守ることをまとめた開発者向けの文書です。
+使い方は [`README.md`](../README.md)、ビルドと配布は [`app/README.md`](../app/README.md) を参照してください。
 
 ## 目的
 
@@ -10,48 +10,53 @@ rekordbox の `master.db` を読み取り専用で直接読むので、ほかの
 
 ## 構成
 
-| プロジェクト | TFM | 役割 |
-|---|---|---|
-| `NowPlayingVrcOsc.Core` | `net10.0` | 曲の取得、整形、OSC 送信。UI に依存しない |
-| `NowPlayingVrcOsc.App` | `net10.0-windows` | WPF の画面、トレイ常駐、自動更新。コードビハインドで書く（MVVM は使わない） |
-| `NowPlayingVrcOsc.Core.Tests` | `net10.0` | Core の xUnit テスト |
+Tauri v2 のアプリです（v2 までは C# / WPF。v3 で移植し、機能と設定ファイルはそのまま引き継いでいます）。
 
-ソリューションは `gui/NowPlayingVrcOsc.slnx`、バージョンは `gui/Directory.Build.props` で管理します。
+| 場所 | 役割 |
+|---|---|
+| `app/ui/` | 画面（Vite と TypeScript。メイン画面 `index.html` と設定画面 `settings.html`） |
+| `app/src-tauri/src/` の `app.rs`、`commands.rs`、`updater.rs`、`lib.rs`、`main.rs` | アプリ層。ウィンドウ、トレイ、ダイアログ、画面から呼ぶコマンド、自動更新 |
+| `app/src-tauri/src/` のそれ以外 | 曲の取得、整形、OSC 送信。Tauri に依存しない |
 
-主な依存パッケージ:
+- 画面は Rust のコマンドを呼び、状態の変化は `main-state` イベントで受け取ります。
+- 確認や警告のダイアログは Rust 側から出します。
+- 多重起動はできません（`tauri-plugin-single-instance`）。2 つ目を起動すると、起動中のウィンドウが前に出ます。
 
-- Microsoft.Data.Sqlite.Core と SQLite3MC.PCLRaw.bundle（暗号化された `master.db` を開く）
-- System.Security.Cryptography.ProtectedData（復号キーを DPAPI で保存する）
-- Velopack（インストーラーと自動更新）
+主な依存クレート:
 
-OSC の送信は自前で実装しています（`OscSender`）。
+- rusqlite と、`build.rs` で `sqlite3mc-src` からビルドする SQLite3 Multiple Ciphers（暗号化された `master.db` を開く）
+- windows（DPAPI で復号キーを保存する）
+- ureq（HTTPS。復号キーの取得と Spotify）
+- velopack（インストーラーと自動更新）
+
+OSC の送信は自前で実装しています（`osc.rs`）。
 
 ## 処理の流れ
 
-`BridgeService` が `RekordboxTrackSource` から曲を受け取り、重複を除いてから整形して送信します。
+`bridge.rs` のスレッドが、確認の間隔ごとに `rekordbox/source.rs` の `RekordboxTrackSource::tick` を呼びます。受け取った曲は、重複を除いてから整形して送ります。
 
-1. **DB の場所を決める**（`RekordboxPaths`）
+1. **DB の場所を決める**（`rekordbox/paths.rs`）
    1. 設定の `DbPathOverride`
    2. `%APPDATA%\Pioneer\rekordboxAgent\storage\options.json` の `db-path`
    3. `%APPDATA%\Pioneer\rekordbox\master.db`
 2. **rekordbox が起動しているか確かめる。** `master.db-wal` が無ければ未起動とみなし、DB を開きません。読み取り専用で開いても `-wal` と `-shm` が作られて残るためです。
 3. **変化があったときだけ読む。** `master.db` と `-wal` の更新時刻とサイズが前回と同じなら開きません。確認の間隔は `PollIntervalSeconds`（既定 1.0 秒、下限 0.2 秒）です。
-4. **DB を開く**（`MasterDb`）。読み取り専用で開き、読み終えるたびに閉じます。
-5. **新しい再生を見つける**（`HistoryCursor`）。`djmdSongHistory` の rowid をカーソルにします。
+4. **DB を開く**（`rekordbox/master_db.rs`）。読み取り専用で開き、読み終えるたびに閉じます。
+5. **新しい再生を見つける**（`rekordbox/cursor.rs`）。`djmdSongHistory` の rowid をカーソルにします。
    - 起動後と再接続後の最初の読み取りは、基準位置を決めるだけで送りません。
    - 新しい行が複数あるときは、最も新しい 1 行だけを使います。
    - 履歴が削除されて rowid が戻ったときは、送らずに基準を取り直します。
-6. **曲情報を作る。** `djmdContent` と、アーティスト・アルバム・レーベルの各テーブルから `TrackInfo` を作ります。`TrackInfo.Id` は `djmdContent.ID` です。
-7. **Spotify の曲名を補う**（`SpotifyOEmbedClient`）。Spotify 由来の曲は曲名が暗号化されています。このときは Spotify の oEmbed から曲名だけを取得します。取得できなければ送らず、状態欄に表示します。
-8. **重複を除く**（`TrackDeduplicator`）。ContentID（無ければ曲名）が直前と同じなら送りません。
-9. **整形して送る**（`TrackFormatter` → `VrcChatboxSender`）。
+6. **曲情報を作る**（`rekordbox/normalize.rs`）。`djmdContent` と、アーティスト・アルバム・レーベルの各テーブルから `TrackInfo` を作ります。`TrackInfo.Id` は `djmdContent.ID` です。
+7. **Spotify の曲名を補う**（`spotify.rs`）。Spotify 由来の曲は曲名が暗号化されています。このときは Spotify の oEmbed から曲名だけを取得します。取得できなければ送らず、状態欄に表示します。
+8. **重複を除く**（`dedup.rs`）。ContentID（無ければ曲名）が直前と同じなら送りません。
+9. **整形して送る**（`format.rs` → `osc.rs`）。
 
 ## 復号キー
 
-`master.db` は暗号化されています。`KeyResolver` は次の順にキーを探し、実際に DB を開けたものだけを使います。
+`master.db` は暗号化されています。`rekordbox/key_resolver.rs` は次の順にキーを探し、実際に DB を開けたものだけを使います。
 
 1. `%AppData%\NowPlayingVrcOsc\key.dpapi` に保存済みのキー（DPAPI で暗号化）
-2. 公開されている情報からの自動取得（GitHub への HTTPS 通信。取得元はコード内の `Rekordbox/default-key-sources.json`）
+2. 公開されている情報からの自動取得（GitHub への HTTPS 通信。取得元はコード内の `rekordbox/default-key-sources.json`）
 3. 設定画面での手入力（確認してから 1. に保存する）
 
 自動取得が全部失敗したときは、10 分間は再取得しません。
@@ -80,12 +85,13 @@ OSC の送信は自前で実装しています（`OscSender`）。
 
 ## 設定
 
-`%AppData%\NowPlayingVrcOsc\settings.json` に保存します。項目と既定値は `AppSettings` と [`gui/README.md`](../gui/README.md) の表を参照してください。
+`%AppData%\NowPlayingVrcOsc\settings.json` に保存します。v2 と同じ場所・同じキー名（PascalCase）なので、v2 の設定をそのまま読めます。項目と既定値は `settings.rs` の `AppSettings` を参照してください。
 読めないときや壊れているときは既定値で起動します。復号キーは `settings.json` には保存しません。
 
 ## 自動更新
 
-- Velopack のインストーラー版でだけ動きます。ZIP 版と `dotnet run` では動きません。
+- Velopack のインストーラー版でだけ動きます。ZIP 版と `npm run tauri dev` では動きません。
+- packId（`NowPlayingVrcOsc`）、exe 名（`NowPlayingVrcOsc.exe`）、packTitle（`DJ Now Playing for VRChat`）で、インストール済みの版と新しい版を結び付けます。
 - 起動時に 1 回、GitHub Releases（`khlizard/nowplaying-vrc-osc`、プレリリースを含む）を確認し、新しい版があればダウンロードします。
 - 適用はアプリを終了したとき、または［今すぐ更新して再起動］を押したときです。
 - 環境変数 `NPVO_UPDATE_FEED` にフォルダを指定すると、そのフォルダを更新元として試せます。
@@ -103,10 +109,13 @@ OSC の送信は自前で実装しています（`OscSender`）。
 ## 変更するときに守ること
 
 - `master.db` に書き込まない。書き込みの SQL も、`rekey`・`journal_mode`・`wal_checkpoint` などの PRAGMA も使わない。
-- DB を開くのは `MasterDb` だけにする。
+- DB を開くのは `rekordbox/master_db.rs` だけにする。
 - 復号キーをログ、画面、例外メッセージに出さない。
 - 起動時と再接続時に、その時点の曲を送らない。
-- テストに実際の `master.db` を使わない。`NowPlayingVrcOsc.Core.Tests` は、テスト内で作る暗号化 DB を使う。
+- テストに実際の `master.db` を使わない。テストの中で暗号化した DB を作って使う。
+- テストで実際の `%AppData%\NowPlayingVrcOsc` を読み書きしない。
+- packId、exe 名、packTitle を変えない（インストール済みの版が自動更新されなくなる）。
+- cargo を直接実行しない。`npm run tauri` と `npm run test:rust` を使う（[`app/README.md`](../app/README.md)）。
 
 ## 制約
 

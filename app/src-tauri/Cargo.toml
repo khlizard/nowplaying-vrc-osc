@@ -1,0 +1,48 @@
+[package]
+name = "nowplaying-vrc-osc"
+version = "3.0.0-beta"
+description = "rekordbox で再生した曲を VRChat の Chatbox へ OSC で送る"
+edition = "2021"
+license = "MIT"
+publish = false
+
+[lib]
+name = "nowplaying_vrc_osc_lib"
+crate-type = ["rlib"]
+
+[[bin]]
+name = "NowPlayingVrcOsc"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+cc = "1"
+sqlite3mc-src = "=207.1.0"
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-single-instance = "2"
+tauri-plugin-dialog = "2"
+# vpk（Velopack CLI）1.2.161 と合わせる。
+velopack = "=1.2.161"
+# 暗号化された master.db は、build.rs でビルドする SQLite3 Multiple Ciphers で開く（bundled は使わない）。
+rusqlite = { version = "0.43", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+regex = "1"
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+url = "2"
+# HTTP は velopack と同じ ureq（rustls + ring）を使う。
+ureq = "3"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Security_Cryptography"] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

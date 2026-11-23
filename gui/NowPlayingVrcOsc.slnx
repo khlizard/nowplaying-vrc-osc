@@ -1,5 +1,0 @@
-<Solution>
-  <Project Path="NowPlayingVrcOsc.App/NowPlayingVrcOsc.App.csproj" />
-  <Project Path="NowPlayingVrcOsc.Core/NowPlayingVrcOsc.Core.csproj" />
-  <Project Path="NowPlayingVrcOsc.Core.Tests/NowPlayingVrcOsc.Core.Tests.csproj" />
-</Solution>

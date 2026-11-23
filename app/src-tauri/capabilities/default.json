@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "メイン画面と設定画面に許可する操作（ダイアログなどは Rust 側から呼ぶ）",
+  "windows": ["main", "settings"],
+  "permissions": ["core:default"]
+}

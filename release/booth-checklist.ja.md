@@ -5,10 +5,10 @@
 
 ## 準備
 
-- [ ] `gui/Directory.Build.props` の `<Version>` を上げた
-- [ ] 使い方・設定・通信が変わった場合、`README.md`、`gui/README.md`、`docs/design.ja.md`、`release/README.ja.txt` を直した
+- [ ] `app/package.json` と `app/src-tauri/Cargo.toml` の `version` を上げた
+- [ ] 使い方・設定・通信が変わった場合、`README.md`、`app/README.md`、`docs/design.ja.md`、`release/README.ja.txt` を直した
 - [ ] `release/notes/<Version>.md` にリリースノートを書いた（任意）
-- [ ] `cd gui; dotnet test NowPlayingVrcOsc.Core.Tests` が通った
+- [ ] `cd app; npm run test:rust` と `npm run build` が通った
 
 ## 動作確認
 
@@ -18,28 +18,28 @@
 
 ## インストーラー（GitHub Releases）
 
-- [ ] `.\gui\scripts\publish-installer.ps1` で Setup.exe を作り、インストール・起動・アンインストールを確認した
+- [ ] `npm run pack` で Setup.exe を作り、インストール・起動・アンインストールを確認した
 - [ ] `NPVO_UPDATE_FEED` に `dist\velopack` を指定し、前の版から新しい版への自動更新を確認した
-- [ ] `.\gui\scripts\publish-installer.ps1 -Upload` で公開した（タグ `gui-v<Version>` は自動で作られる）
+- [ ] `npm run pack -- --upload` で公開した（タグ `gui-v<version>` は自動で作られる）
 - [ ] GitHub Releases のページで、Setup.exe と Portable.zip が添付されていることを確認した
 
 ## ZIP（BOOTH）
 
-- [ ] `.\gui\scripts\publish-release.ps1` で ZIP を作った（単一 exe で問題があれば `-Format Folder`）
-- [ ] .NET が入っていない PC で、解凍・起動を確認した
+- [ ] `npm run zip` で ZIP を作った
+- [ ] 開発環境の入っていない PC で、解凍・起動を確認した
 - [ ] ZIP に `README.ja.txt`、`LICENCE.txt`、`THIRD-PARTY-NOTICES.txt` が入っている
 - [ ] BOOTH の ZIP を差し替え、商品ページのバージョン表記を更新した
 
 ## ライセンス
 
 - [ ] `LICENCE.txt` と ルートの `LICENSE` が同じ内容で、MIT の本文が崩れていない
-- [ ] 依存パッケージを変えた場合、`THIRD-PARTY-NOTICES.txt` の名前・バージョン・ライセンスを直した
+- [ ] 依存クレートや npm パッケージを変えた場合、`THIRD-PARTY-NOTICES.txt` を作り直した（`app/README.md` の手順を参照）
 
 ## BOOTH 商品ページ（初回、または内容が変わったとき）
 
-- [ ] 商品名: **DJ Now Playing for VRChat**（アプリ内の表示名は Now Playing → VRChat）
+- [ ] 商品名: **DJ Now Playing for VRChat**
 - [ ] 非公式ツールである旨の免責（rekordbox / AlphaTheta、VRChat、Spotify）
-- [ ] 動作環境（Windows 10/11 64bit、.NET 不要、rekordbox 7、VRChat の OSC 有効）
+- [ ] 動作環境（Windows 10/11 64bit、WebView2 ランタイム、rekordbox 7、VRChat の OSC 有効）
 - [ ] 送信が「再生時間設定」の秒数だけ遅れること、Spotify の曲は曲名だけであること
 - [ ] 通信の説明（復号キーの自動取得、Spotify の曲名取得、インストーラー版の更新確認）
 - [ ] 使い方（解凍 → exe 起動 → 開始）と、SmartScreen 警告への対処

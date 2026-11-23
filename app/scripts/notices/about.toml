@@ -1,0 +1,26 @@
+# cargo-about の設定。release/THIRD-PARTY-NOTICES.txt を作るときに使う（app/README.md の「第三者表記」）。
+accepted = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "MPL-2.0",
+    "CC0-1.0",
+    "BSL-1.0",
+    "0BSD",
+    "CDLA-Permissive-2.0",
+    "OpenSSL",
+    "Unlicense",
+]
+# Windows 向けの依存だけを数える。
+targets = ["x86_64-pc-windows-msvc"]
+# 開発時だけ使うクレート（テスト・ビルド用）は配布物に入らないので除く。
+ignore-dev-dependencies = true
+ignore-build-dependencies = true
+# アプリ自身（publish = false）は一覧に載せない。
+private = { ignore = true }

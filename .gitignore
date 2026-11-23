@@ -98,3 +98,9 @@ refs/
 
 # エディタ / AI ツールのローカル設定
 .cursor/
+
+# Tauri 版（app/）。target は with-target.mjs で %LOCALAPPDATA% に出すが、念のため除外する
+app/node_modules/
+app/dist-web/
+app/src-tauri/target/
+app/src-tauri/gen/

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>設定 — Now Playing → VRChat</title>
+    <link rel="stylesheet" href="./src/style.css" />
+    <script type="module" src="./src/settings.ts"></script>
+  </head>
+  <body class="settings">
+    <form id="form" class="grid" autocomplete="off" novalidate>
+      <label for="db-path" class="row-label">master.db</label>
+      <div class="cell with-button">
+        <input id="db-path" type="text" spellcheck="false" />
+        <button id="browse" type="button" class="small">参照...</button>
+      </div>
+      <div></div>
+      <div id="db-hint" class="note hint"></div>
+
+      <label for="poll" class="row-label">ポーリング間隔（秒）</label>
+      <div class="cell"><input id="poll" type="text" class="w120" /></div>
+
+      <label for="key" class="row-label">復号キー</label>
+      <div class="cell"><input id="key" type="password" spellcheck="false" /></div>
+      <div></div>
+      <div class="notes">
+        <div id="key-status" class="note"></div>
+        <div class="note">自動取得できないときだけ入力してください（64 桁の 16 進数）</div>
+      </div>
+
+      <label for="host" class="row-label">VRChat ホスト</label>
+      <div class="cell"><input id="host" type="text" class="w200" spellcheck="false" /></div>
+
+      <label for="port" class="row-label">VRChat ポート</label>
+      <div class="cell"><input id="port" type="text" class="w120" /></div>
+
+      <div></div>
+      <label class="check top-gap"><input id="notification" type="checkbox" />Chatbox 通知音を鳴らす (/chatbox/input 第3引数)</label>
+      <div></div>
+      <label class="check top-gap"><input id="indicator" type="checkbox" />入力中インジケーター (/chatbox/typing) を送る</label>
+
+      <div class="section">Chatbox メッセージ</div>
+
+      <label for="header" class="row-label">ヘッダ</label>
+      <div class="cell"><input id="header" type="text" class="w200" /></div>
+
+      <label for="separator" class="row-label">区切り文字</label>
+      <div class="cell">
+        <input id="separator" type="text" class="w80" />
+        <div class="note">結合時は前後にスペースが付きます（例: - → Title - Artist）</div>
+      </div>
+
+      <div class="row-label top">表示する項目</div>
+      <div class="cell checks">
+        <label class="check"><input id="inc-title" type="checkbox" />title（曲名）</label>
+        <label class="check"><input id="inc-artist" type="checkbox" />artist（アーティスト）</label>
+        <label class="check"><input id="inc-album" type="checkbox" />album（アルバム）</label>
+        <label class="check"><input id="inc-label" type="checkbox" />label（レーベル）</label>
+        <label class="check"><input id="inc-comment" type="checkbox" />comment（コメント）</label>
+      </div>
+
+      <div></div>
+      <label class="check top-gap"><input id="strip" type="checkbox" />曲名 (title) 内の [～] を除去する</label>
+
+      <div class="row-label top">プレビュー</div>
+      <div id="preview" class="note preview">—</div>
+
+      <div></div>
+      <div class="actions">
+        <button id="ok" type="submit" class="primary">OK</button>
+        <button id="cancel" type="button">キャンセル</button>
+      </div>
+    </form>
+  </body>
+</html>

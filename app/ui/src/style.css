@@ -1,0 +1,104 @@
+:root {
+  --bg: #f3f3f3;
+  --fg: #1b1b1b;
+  --muted: #6e6e6e;
+  --border: #b8b8b8;
+  --field-bg: #ffffff;
+  --btn-bg: #e6e6e6;
+  --btn-hover: #dcdcdc;
+  --btn-disabled-fg: #9a9a9a;
+  --accent: #ff7a20;
+  --accent-fg: #ffffff;
+  --update-bg: #fff3e8;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #202020;
+    --fg: #f0f0f0;
+    --muted: #9a9a9a;
+    --border: #5a5a5a;
+    --field-bg: #2b2b2b;
+    --btn-bg: #3a3a3a;
+    --btn-hover: #454545;
+    --btn-disabled-fg: #6f6f6f;
+    --update-bg: #3a2a1c;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.4 "Yu Gothic UI", "Segoe UI", system-ui, sans-serif;
+}
+
+button, input[type="text"], input[type="password"] { font: inherit; color: inherit; }
+button {
+  min-height: 26px;
+  padding: 2px 12px;
+  background: var(--btn-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: default;
+}
+button:hover:not(:disabled) { background: var(--btn-hover); }
+button:disabled { color: var(--btn-disabled-fg); }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+button.primary:hover:not(:disabled) { filter: brightness(0.95); background: var(--accent); }
+button.primary:disabled { opacity: 0.6; }
+input[type="text"], input[type="password"] {
+  width: 100%;
+  height: 24px;
+  padding: 1px 5px;
+  background: var(--field-bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+input[type="checkbox"] { accent-color: var(--accent); margin: 0 6px 0 0; vertical-align: -2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+input:focus-visible { outline-offset: 0; }
+
+/* メイン画面 */
+.main-root { display: flex; flex-direction: column; height: 100%; padding: 16px; }
+.info { flex: 1; min-height: 0; overflow: hidden; }
+.label { font-weight: 700; }
+.value { margin: 2px 0 10px; }
+.value.last { margin-bottom: 0; }
+.wrap { overflow-wrap: anywhere; white-space: pre-wrap; }
+.update { margin-top: 10px; padding: 8px 10px; background: var(--update-bg); border-radius: 4px; }
+.update[hidden] { display: none; }
+.update button { margin-top: 6px; }
+.buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+.version { margin-top: 8px; font-size: 11px; color: var(--muted); text-align: right; }
+
+/* 設定画面 */
+.grid {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  align-content: start;
+  padding: 14px;
+  height: 100%;
+}
+.row-label { align-self: center; padding: 6px 0; }
+.row-label.top { align-self: start; padding-top: 8px; }
+.cell { padding: 6px 0; min-width: 0; }
+.cell.with-button { display: flex; gap: 6px; }
+.cell.with-button input { flex: 1; }
+.cell.with-button button.small { width: 64px; padding: 2px 0; }
+.cell.checks { display: flex; flex-direction: column; gap: 4px; }
+.w80 { width: 80px !important; }
+.w120 { width: 120px !important; }
+.w200 { width: 200px !important; }
+.note { font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+.cell .note { margin-top: 2px; }
+.hint { margin-bottom: 4px; }
+.notes { margin-bottom: 4px; }
+.check { display: block; }
+.top-gap { margin-top: 8px; }
+.section { grid-column: 1 / 3; font-weight: 600; margin: 16px 0 4px; }
+.preview { padding: 8px 0; white-space: pre-wrap; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.actions button { width: 90px; }
