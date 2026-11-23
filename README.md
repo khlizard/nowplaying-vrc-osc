@@ -86,10 +86,6 @@ rekordbox 上の Spotify の曲は、曲名が暗号化されています。
 ビルド、テスト、配布物の作り方は [`app/README.md`](app/README.md) を参照してください。
 仕組みの説明は [`docs/design.ja.md`](docs/design.ja.md) にあります。
 
-## 旧 CLI 版（Python）
-
-Now Playing App 2 と連携する Python のコマンドライン版もあります。[`docs/python-cli.ja.md`](docs/python-cli.ja.md) を参照してください。
-
 ## 変更履歴
 
 [`CHANGELOG.md`](CHANGELOG.md) を参照してください。

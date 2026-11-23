@@ -1,39 +1,6 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Virtual environments
-.venv/
-venv/
-ENV/
-env/
-.virtualenv/
-
 # Environment / secrets
 .env
 .env.*
-!.env.example
 
 # IDE / editors
 .vscode/
@@ -44,7 +11,6 @@ env/
 *.swo
 *~
 .project
-.pydevproject
 .settings/
 *.sublime-project
 *.sublime-workspace
@@ -66,34 +32,16 @@ $RECYCLE.BIN/
 *.log
 logs/
 
-# Testing / type checking
-.pytest_cache/
-.coverage
-.coverage.*
-htmlcov/
-.tox/
-.nox/
-coverage.xml
-*.cover
-.hypothesis/
-.mypy_cache/
-.dmypy.json
-dmypy.json
-.ruff_cache/
-
-# Jupyter
-.ipynb_checkpoints/
-
 # Local overrides (ports, paths, etc.)
 config.local.*
 *.local.json
 
-# GUI / Python 配布物（publish-release.ps1 等の出力 — コミットしない）
+# 配布物（npm run zip / pack の出力 — コミットしない）
 dist/
 *.exe
 *.zip
 
-# 参照用の外部ドキュメント（VRChat / Now Playing App など。再配布しない）
+# 参照用の外部ドキュメント（VRChat OSC など。再配布しない）
 refs/
 
 # エディタ / AI ツールのローカル設定・個人のメモ

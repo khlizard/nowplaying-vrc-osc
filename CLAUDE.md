@@ -10,10 +10,10 @@ rekordbox の `master.db` を読み取り専用で直接読む。
 | 構成 | パス | 状態 |
 |---|---|---|
 | アプリ（Tauri v2 / Rust） | `app/` | v3.0.0-beta。主に開発する対象 |
-| 旧 CLI 版（Python） | `nowplaying-vrc-osc.py` | Now Playing App 2 連携。保守のみ |
 | 設計メモ | `docs/design.ja.md` | アプリの仕組みと、守ること |
 
 v2（C# / WPF、`gui/`）は v3 で Tauri に移植して削除した。C# 版は Git 履歴に残っている。設定ファイルと `key.dpapi` は C# 版と互換。
+旧 CLI 版（Python、Now Playing App 2 連携）も削除した。Git 履歴（タグ `v1.0.0` など）に残っている。
 
 ## 仕様の正
 
@@ -25,8 +25,7 @@ v2（C# / WPF、`gui/`）は v3 で Tauri に移植して削除した。C# 版�
 ## 作業スコープ
 
 - **アプリ**: 画面は `app/ui/`、Rust は `app/src-tauri/src/`。Tauri に依存しない処理（rekordbox、整形、OSC など）は Tauri の型を使わずに書き、アプリ層（`app.rs`、`commands.rs`、`updater.rs`、`lib.rs`、`main.rs`）から呼ぶ。
-- **旧 CLI 版**: ユーザーが明示的に依頼しない限り変更しない。設定の正は [`.env.example`](.env.example)、説明は [`docs/python-cli.ja.md`](docs/python-cli.ja.md)。
-- `refs/` は外部の参照ドキュメント（VRChat OSC、Now Playing App など）のローカル置き場。Git 管理外で、再配布しない。
+- `refs/` は外部の参照ドキュメント（VRChat OSC など）のローカル置き場。Git 管理外で、再配布しない。
 
 ## 技術スタック（アプリ）
 
@@ -86,7 +85,7 @@ npm run tauri build -- --no-bundle     # release の exe
 ├── LICENSE                      # MIT（release/LICENCE.txt と同じ内容）
 ├── docs/
 │   ├── design.ja.md             # アプリの設計メモ
-│   └── python-cli.ja.md         # 旧 CLI 版の説明
+│   └── images/                  # README の画面写真
 ├── app/
 │   ├── package.json             # バージョンの正
 │   ├── scripts/                 # with-target.mjs, pack.mjs, zip.mjs
@@ -95,16 +94,14 @@ npm run tauri build -- --no-bundle     # release の exe
 │   └── README.md                # 開発者向け
 ├── release/                     # 配布物に同梱する README・ライセンス・第三者表記、リリース手順
 ├── resources/                   # アイコン（icon.svg が元データ、icon1024.png を生成に使う）
-├── nowplaying-vrc-osc.py        # 旧 CLI 版
-├── .env.example, requirements.txt  # 旧 CLI 版用
 └── refs/                        # 外部ドキュメント（Git 管理外）
 ```
 
 ## 作業ルール
 
-1. **最小スコープ**: 依頼の範囲外は変更しない。旧 CLI 版に不用意な差分を入れない。
+1. **最小スコープ**: 依頼の範囲外は変更しない。
 2. **既存の規約に合わせる**: [.editorconfig](.editorconfig) に従う。
 3. **ドキュメントの同期**: 使い方・設定・コマンドが変わったら、README.md、app/README.md、docs/design.ja.md、release/README.ja.txt のうち該当するものを同じ作業の中で直す。
 4. **コミット**: ユーザーが明示的に依頼したときだけ行う。メッセージは日本語。
-5. **機密**: `.env`、`key.dpapi`、`settings.json`、実際の `master.db`、復号キーをコミットしない。設定例は `.env.example` を更新する。
+5. **機密**: `key.dpapi`、`settings.json`、実際の `master.db`、復号キーをコミットしない。
 6. **検証**: アプリを変更したら `npm run test:rust` と `npm run build` を通す。rekordbox や VRChat が必要な動作確認は、実施できなかったら完了報告で明記する。
