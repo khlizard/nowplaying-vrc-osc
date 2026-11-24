@@ -12,7 +12,7 @@ use crate::bridge::{Bridge, BridgeEvent};
 use crate::settings::AppSettings;
 use crate::updater::Updater;
 
-pub const PRODUCT_NAME: &str = "DJ Now Playing for VRChat";
+pub const PRODUCT_NAME: &str = "rekordbox Now Playing for VRChat";
 pub const MAIN_WINDOW: &str = "main";
 pub const SETTINGS_WINDOW: &str = "settings";
 const TRAY_ID: &str = "main";

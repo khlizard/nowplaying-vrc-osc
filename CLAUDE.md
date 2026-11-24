@@ -4,7 +4,7 @@
 
 ## プロジェクト概要
 
-**DJ Now Playing for VRChat**: rekordbox で再生した曲を、VRChat の Chatbox へ OSC で送る Windows アプリ。
+**rekordbox Now Playing for VRChat**: rekordbox で再生した曲を、VRChat の Chatbox へ OSC で送る Windows アプリ。
 rekordbox の `master.db` を読み取り専用で直接読む。
 
 | 構成 | パス | 状態 |

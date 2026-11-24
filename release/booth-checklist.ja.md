@@ -37,7 +37,7 @@
 
 ## BOOTH 商品ページ（初回、または内容が変わったとき）
 
-- [ ] 商品名: **DJ Now Playing for VRChat**
+- [ ] 商品名: **rekordbox Now Playing for VRChat**
 - [ ] 非公式ツールである旨の免責（rekordbox / AlphaTheta、VRChat、Spotify）
 - [ ] 動作環境（Windows 10/11 64bit、WebView2 ランタイム、rekordbox 7、VRChat の OSC 有効）
 - [ ] 送信が「再生時間設定」の秒数だけ遅れること、Spotify の曲は曲名だけであること

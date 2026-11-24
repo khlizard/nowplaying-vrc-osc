@@ -1,4 +1,4 @@
-# DJ Now Playing for VRChat
+# rekordbox Now Playing for VRChat
 
 rekordbox で再生した曲を、VRChat の Chatbox に `🎵 Title - Artist` の形で表示する Windows アプリです。
 rekordbox のデータベース（`master.db`）を読み取り専用で直接読み、OSC で VRChat に送ります。画面は日本語です。

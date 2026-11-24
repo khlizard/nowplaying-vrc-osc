@@ -1,4 +1,4 @@
-# DJ Now Playing for VRChat — 設計メモ（v3）
+# rekordbox Now Playing for VRChat — 設計メモ（v3）
 
 アプリの仕組みと、変更するときに守ることをまとめた開発者向けの文書です。
 使い方は [`README.md`](../README.md)、ビルドと配布は [`app/README.md`](../app/README.md) を参照してください。
@@ -91,7 +91,7 @@ OSC の送信は自前で実装しています（`osc.rs`）。
 ## 自動更新
 
 - Velopack のインストーラー版でだけ動きます。ZIP 版と `npm run tauri dev` では動きません。
-- packId（`NowPlayingVrcOsc`）、exe 名（`NowPlayingVrcOsc.exe`）、packTitle（`DJ Now Playing for VRChat`）で、インストール済みの版と新しい版を結び付けます。
+- packId（`NowPlayingVrcOsc`）、exe 名（`NowPlayingVrcOsc.exe`）、packTitle（`DJ Now Playing for VRChat`）で、インストール済みの版と新しい版を結び付けます。packTitle は旧名のままで、アプリの表示名（`rekordbox Now Playing for VRChat`）とは違います。
 - 起動時に 1 回、GitHub Releases（`khlizard/nowplaying-vrc-osc`、プレリリースを含む）を確認し、新しい版があればダウンロードします。
 - 適用はアプリを終了したとき、または［今すぐ更新して再起動］を押したときです。
 - 環境変数 `NPVO_UPDATE_FEED` にフォルダを指定すると、そのフォルダを更新元として試せます。

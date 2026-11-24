@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "DJ Now Playing for VRChat",
+  "productName": "rekordbox Now Playing for VRChat",
   "mainBinaryName": "NowPlayingVrcOsc",
   "version": "../package.json",
   "identifier": "com.tokageworks.nowplayingvrcosc",
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "DJ Now Playing for VRChat",
+        "title": "rekordbox Now Playing for VRChat",
         "url": "index.html",
         "width": 540,
         "height": 330,

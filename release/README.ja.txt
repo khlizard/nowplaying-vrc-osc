@@ -1,4 +1,4 @@
-DJ Now Playing for VRChat
+rekordbox Now Playing for VRChat
 バージョン {{VERSION}}
 
 ================================================================================
