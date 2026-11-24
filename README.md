@@ -3,7 +3,7 @@
 rekordbox で再生した曲を、VRChat の Chatbox に `🎵 Title - Artist` の形で表示する Windows アプリです。
 rekordbox のデータベース（`master.db`）を読み取り専用で直接読み、OSC で VRChat に送ります。画面は日本語です。
 
-![メイン画面（状態・現在の曲・最終送信と、開始・停止・テスト送信のボタン、右上のメニュー）と、設定画面（master.db の場所、送信先、Chatbox メッセージの項目とプレビュー）](docs/images/screenshot.png)
+![メイン画面（状態・現在の曲・最終送信と、開始・停止・テスト送信のボタン、右上のメニュー）、このソフトについて（バージョンと更新の確認）、設定画面（master.db の場所、送信先、Chatbox メッセージの項目とプレビュー）](docs/images/screenshot.png)
 
 > rekordbox（AlphaTheta）、VRChat、Spotify の公式ツールではありません。自己責任でご利用ください。
 > 趣味で作っています。要望に応えられるとは限りません。不具合は [Issues](https://github.com/khlizard/nowplaying-vrc-osc/issues) で知らせてください。
