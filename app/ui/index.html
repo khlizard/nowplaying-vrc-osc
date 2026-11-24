@@ -9,25 +9,26 @@
   </head>
   <body class="main">
     <main class="main-root">
-      <section class="info">
-        <div class="label">状態:</div>
-        <div id="status" class="value">停止中</div>
-        <div class="label">現在の曲:</div>
-        <div id="track" class="value wrap">—</div>
-        <div class="label">最終送信:</div>
-        <div id="last-sent" class="value wrap last">—</div>
-      </section>
+      <div class="top">
+        <section class="info">
+          <div class="label">状態</div>
+          <div id="status" class="value">停止中</div>
+          <div class="label">現在の曲</div>
+          <div id="track" class="value wrap">—</div>
+          <div class="label">最終送信</div>
+          <div id="last-sent" class="value wrap">—</div>
+        </section>
+        <button id="menu" type="button" class="menu-button" aria-label="メニュー" title="メニュー">☰</button>
+      </div>
       <section id="update-panel" class="update" hidden>
-        <div id="update-text"></div>
-        <button id="update-button" type="button" class="primary">今すぐ更新して再起動</button>
+        <div id="update-text" class="update-text"></div>
+        <button id="update-button" type="button" class="primary">更新して再起動</button>
       </section>
       <section class="buttons">
         <button id="start" type="button">開始</button>
         <button id="stop" type="button" disabled>停止</button>
         <button id="test-send" type="button">テスト送信</button>
-        <button id="settings" type="button">設定...</button>
       </section>
-      <div id="version" class="version"></div>
     </main>
   </body>
 </html>

@@ -62,17 +62,53 @@ input[type="checkbox"] { accent-color: var(--accent); margin: 0 6px 0 0; vertica
 input:focus-visible { outline-offset: 0; }
 
 /* メイン画面 */
-.main-root { display: flex; flex-direction: column; height: 100%; padding: 16px; }
-.info { flex: 1; min-height: 0; overflow: hidden; }
-.label { font-weight: 700; }
-.value { margin: 2px 0 10px; }
-.value.last { margin-bottom: 0; }
-.wrap { overflow-wrap: anywhere; white-space: pre-wrap; }
-.update { margin-top: 10px; padding: 8px 10px; background: var(--update-bg); border-radius: 4px; }
+.main-root { display: flex; flex-direction: column; height: 100%; padding: 10px 12px; }
+.top { flex: 1; min-height: 0; display: flex; gap: 8px; align-items: flex-start; }
+.info {
+  flex: 1;
+  min-width: 0;
+  max-height: 100%;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  row-gap: 4px;
+  align-content: start;
+}
+.label { font-weight: 700; white-space: nowrap; }
+.value { min-width: 0; }
+/* 長い曲名は 2 行まで */
+.wrap {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.has-update .wrap { -webkit-line-clamp: 1; white-space: nowrap; text-overflow: ellipsis; display: block; }
+.menu-button { flex: none; width: 30px; min-height: 26px; padding: 0; font-size: 15px; line-height: 1; }
+.update {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: var(--update-bg);
+  border-radius: 4px;
+}
 .update[hidden] { display: none; }
-.update button { margin-top: 6px; }
-.buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
-.version { margin-top: 8px; font-size: 11px; color: var(--muted); text-align: right; }
+.update-text { flex: 1; min-width: 0; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.update button { flex: none; }
+.buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+
+/* このソフトについて */
+.about-root { display: flex; flex-direction: column; height: 100%; padding: 14px 16px; }
+.about-name { font-weight: 700; font-size: 14px; }
+.about-version { margin: 2px 0 4px; }
+.about-update { display: flex; align-items: center; gap: 10px; margin-top: auto; }
+.about-status { flex: 1; min-width: 0; font-size: 12px; overflow-wrap: anywhere; }
+.about-update button { flex: none; }
 
 /* 設定画面 */
 .grid {

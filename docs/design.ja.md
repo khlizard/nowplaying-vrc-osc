@@ -14,11 +14,13 @@ Tauri v2 のアプリです（v2 までは C# / WPF。v3 で移植し、機能�
 
 | 場所 | 役割 |
 |---|---|
-| `app/ui/` | 画面（Vite と TypeScript。メイン画面 `index.html` と設定画面 `settings.html`） |
+| `app/ui/` | 画面（Vite と TypeScript。メイン画面 `index.html`、設定画面 `settings.html`、このソフトについて `about.html`） |
 | `app/src-tauri/src/` の `app.rs`、`commands.rs`、`updater.rs`、`lib.rs`、`main.rs` | アプリ層。ウィンドウ、トレイ、ダイアログ、画面から呼ぶコマンド、自動更新 |
 | `app/src-tauri/src/` のそれ以外 | 曲の取得、整形、OSC 送信。Tauri に依存しない |
 
-- 画面は Rust のコマンドを呼び、状態の変化は `main-state` イベントで受け取ります。
+- 画面は Rust のコマンドを呼び、状態の変化は `main-state`（メイン画面）と `about-state`（このソフトについて）のイベントで受け取ります。画面は受け取った状態を表示するだけで、ボタンを押せるかどうかなどは状態から決めます。
+- メイン画面右上の ☰ は、Rust のネイティブのポップアップメニュー（設定...、このソフトについて...）を開きます。メニューのイベントは、トレイのメニューの分も含めて `app.rs` の `handle_menu_event` 1 か所で受けます。
+- 設定画面と「このソフトについて」はメイン画面を親にした子ウィンドウです。開いている間はメイン画面を操作できないので、同時には開きません。
 - 確認や警告のダイアログは Rust 側から出します。
 - 多重起動はできません（`tauri-plugin-single-instance`）。2 つ目を起動すると、起動中のウィンドウが前に出ます。
 
@@ -92,8 +94,9 @@ OSC の送信は自前で実装しています（`osc.rs`）。
 
 - Velopack のインストーラー版でだけ動きます。ZIP 版と `npm run tauri dev` では動きません。
 - packId（`NowPlayingVrcOsc`）、exe 名（`NowPlayingVrcOsc.exe`）、packTitle（`DJ Now Playing for VRChat`）で、インストール済みの版と新しい版を結び付けます。packTitle は旧名のままで、アプリの表示名（`rekordbox Now Playing for VRChat`）とは違います。
-- 起動時に 1 回、GitHub Releases（`khlizard/nowplaying-vrc-osc`、プレリリースを含む）を確認し、新しい版があればダウンロードします。
-- 適用はアプリを終了したとき、または［今すぐ更新して再起動］を押したときです。
+- 起動時に 1 回と、「このソフトについて」の［更新を確認］を押したときに、GitHub Releases（`khlizard/nowplaying-vrc-osc`、プレリリースを含む）を確認し、新しい版があればダウンロードします。
+- 確認の状態は `updater.rs` の `UpdateStatus` です（`NotInstalled`、`Idle`、`Checking`、`UpToDate`、`Downloaded`、`Failed`）。確認を始められるのは `Idle`、`UpToDate`、`Failed` のときだけで、確認は同時に 1 つしか走りません（`try_begin_check`）。
+- 適用はアプリを終了したとき、またはメイン画面の［更新して再起動］を押したときです。
 - 環境変数 `NPVO_UPDATE_FEED` にフォルダを指定すると、そのフォルダを更新元として試せます。
 - アンインストール時は `%AppData%\NowPlayingVrcOsc` を削除します。
 
@@ -103,7 +106,7 @@ OSC の送信は自前で実装しています（`osc.rs`）。
 |---|---|
 | GitHub（raw.githubusercontent.com） | 保存済みのキーが無く、rekordbox が起動しているとき（復号キーの自動取得） |
 | open.spotify.com | 曲名が取れない Spotify 由来の曲が履歴に追加されたとき。送るのはトラック ID だけ |
-| GitHub Releases | インストーラー版の起動時（更新確認） |
+| GitHub Releases | インストーラー版の起動時と、［更新を確認］を押したとき（更新確認） |
 | VRChat（OSC / UDP） | 曲の送信とテスト送信 |
 
 ## 変更するときに守ること

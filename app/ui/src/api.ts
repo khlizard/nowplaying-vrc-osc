@@ -4,12 +4,26 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 export type { UnlistenFn };
 
 export type MainState = {
-  version: string;
   running: boolean;
   status: string;
   track: string;
   lastSent: string;
   updateVersion: string | null;
+};
+
+/** 更新の確認の状態（Rust の UpdateStatus）。 */
+export type UpdateStatus =
+  | { kind: "notInstalled" }
+  | { kind: "idle" }
+  | { kind: "checking" }
+  | { kind: "upToDate" }
+  | { kind: "downloaded"; version: string }
+  | { kind: "failed"; message: string };
+
+export type AboutState = {
+  productName: string;
+  version: string;
+  update: UpdateStatus;
 };
 
 // Rust の AppSettings をそのまま渡す（キーは PascalCase。v2 の settings.json と同じ形）
@@ -42,10 +56,16 @@ export const getMainState = () => invoke<MainState>("get_main_state");
 export const startBridge = () => invoke<void>("start_bridge");
 export const stopBridge = () => invoke<void>("stop_bridge");
 export const testSend = () => invoke<string | null>("test_send");
-export const openSettings = () => invoke<void>("open_settings");
+export const showMainMenu = (x: number, y: number) => invoke<void>("show_main_menu", { x, y });
 export const applyUpdateAndRestart = () => invoke<void>("apply_update_and_restart");
 export const onMainState = (cb: (state: MainState) => void): Promise<UnlistenFn> =>
   listen<MainState>("main-state", (e) => cb(e.payload));
+
+// --- このソフトについて ---
+export const getAboutState = () => invoke<AboutState>("get_about_state");
+export const checkForUpdates = () => invoke<void>("check_for_updates");
+export const onAboutState = (cb: (state: AboutState) => void): Promise<UnlistenFn> =>
+  listen<AboutState>("about-state", (e) => cb(e.payload));
 
 // --- 設定画面 ---
 export const getSettings = () => invoke<AppSettings>("get_settings");

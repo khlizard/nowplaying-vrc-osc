@@ -28,9 +28,11 @@ pub fn run() {
             handle.manage(AppState::new(AppSettings::load()));
             app::build_tray(handle)?;
             app::show_main_window(handle);
-            app::check_update_in_background(handle);
+            app::check_update(handle);
             Ok(())
         })
+        // ☰ メニューとトレイのメニューのイベントは、ここ 1 か所で受ける。
+        .on_menu_event(app::handle_menu_event)
         .on_window_event(|window, event| {
             if window.label() != MAIN_WINDOW {
                 return;
@@ -55,8 +57,10 @@ pub fn run() {
             commands::start_bridge,
             commands::stop_bridge,
             commands::test_send,
-            commands::open_settings,
+            commands::show_main_menu,
             commands::apply_update_and_restart,
+            commands::get_about_state,
+            commands::check_for_updates,
             commands::get_settings,
             commands::get_key_saved,
             commands::resolve_db_path,

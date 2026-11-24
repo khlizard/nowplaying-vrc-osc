@@ -32,7 +32,7 @@ v2（C# / WPF、`gui/`）は v3 で Tauri に移植して削除した。C# 版�
 | 項目 | 内容 |
 |---|---|
 | 本体 | Tauri v2（Rust）。プラグインは single-instance と dialog |
-| UI | Vite + TypeScript（フレームワークなし）。`ui/index.html`（メイン）と `ui/settings.html`（設定） |
+| UI | Vite + TypeScript（フレームワークなし）。`ui/index.html`（メイン）、`ui/settings.html`（設定）、`ui/about.html`（このソフトについて） |
 | DB | rusqlite + SQLite3 Multiple Ciphers（`build.rs` で `sqlite3mc-src` をビルド。読み取り専用） |
 | キー保存 | DPAPI（windows クレート）。v2 の `key.dpapi` と互換 |
 | HTTP | ureq（https のみ、5 秒、1 MiB 上限） |

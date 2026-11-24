@@ -3,7 +3,7 @@ import {
   errorText,
   getMainState,
   onMainState,
-  openSettings,
+  showMainMenu,
   startBridge,
   stopBridge,
   testSend,
@@ -21,8 +21,7 @@ const updateButton = $<HTMLButtonElement>("update-button");
 const startBtn = $<HTMLButtonElement>("start");
 const stopBtn = $<HTMLButtonElement>("stop");
 const testBtn = $<HTMLButtonElement>("test-send");
-const settingsBtn = $<HTMLButtonElement>("settings");
-const versionEl = $("version");
+const menuBtn = $<HTMLButtonElement>("menu");
 
 const orDash = (s: string) => (s === "" ? "—" : s);
 
@@ -33,13 +32,12 @@ function render(s: MainState) {
   lastSentEl.textContent = orDash(s.lastSent);
   startBtn.disabled = s.running;
   stopBtn.disabled = !s.running;
-  versionEl.textContent = s.version;
   if (s.updateVersion !== null) {
-    updateText.textContent = `新しいバージョン ${s.updateVersion} を取得しました。アプリを終了すると更新されます。`;
-    updatePanel.hidden = false;
-  } else {
-    updatePanel.hidden = true;
+    updateText.textContent = `v${s.updateVersion} を取得しました。終了時に更新します。`;
   }
+  updatePanel.hidden = s.updateVersion === null;
+  // 更新パネルが出ている間は、曲名と最終送信を 1 行に詰める。
+  document.body.classList.toggle("has-update", s.updateVersion !== null);
 }
 
 startBtn.addEventListener("click", async () => {
@@ -73,8 +71,10 @@ testBtn.addEventListener("click", async () => {
   }
 });
 
-settingsBtn.addEventListener("click", () => {
-  openSettings().catch((e) => (statusEl.textContent = errorText(e)));
+// メニューはボタンの左下に開く。
+menuBtn.addEventListener("click", () => {
+  const r = menuBtn.getBoundingClientRect();
+  showMainMenu(r.left, r.bottom).catch((e) => (statusEl.textContent = errorText(e)));
 });
 
 updateButton.addEventListener("click", () => {

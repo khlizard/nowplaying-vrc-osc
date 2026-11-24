@@ -4,7 +4,9 @@ use serde::Serialize;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::{DialogExt as _, MessageDialogButtons, MessageDialogKind};
 
-use crate::app::{self, AppState, MainState, MAIN_WINDOW, PRODUCT_NAME, SETTINGS_WINDOW};
+use crate::app::{
+    self, AboutState, AppState, MainState, MAIN_WINDOW, PRODUCT_NAME, SETTINGS_WINDOW,
+};
 use crate::format::format_chatbox_message;
 use crate::rekordbox::dpapi::DpapiKeyStore;
 use crate::rekordbox::master_db::{verify_key, KeyCheckResult};
@@ -50,10 +52,10 @@ pub async fn test_send(app: AppHandle) -> Option<String> {
     }
 }
 
-/// Windows ではウィンドウの作成を同期コマンドで行うと固まるので async にする。
+/// ☰ メニューを開く。位置はメイン画面の左上からの論理座標。
 #[tauri::command]
-pub async fn open_settings(app: AppHandle) -> Result<(), String> {
-    app::open_settings(&app)
+pub async fn show_main_menu(app: AppHandle, x: f64, y: f64) -> Result<(), String> {
+    app::show_main_menu(&app, x, y)
 }
 
 #[tauri::command]
@@ -66,6 +68,19 @@ pub async fn apply_update_and_restart(app: AppHandle) {
     ) {
         app::apply_update_and_restart(&app);
     }
+}
+
+// --- このソフトについて ---
+
+#[tauri::command]
+pub fn get_about_state(app: AppHandle) -> AboutState {
+    app::about_state(&app)
+}
+
+/// 更新の確認を始める（結果は `about-state` で届く）。確認中などで始められなければ何もしない。
+#[tauri::command]
+pub fn check_for_updates(app: AppHandle) {
+    app::check_update(&app);
 }
 
 // --- 設定画面 ---

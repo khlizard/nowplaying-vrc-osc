@@ -4,18 +4,28 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 
 use serde::Serialize;
-use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
+use tauri::menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
-use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Emitter, LogicalPosition, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri_plugin_dialog::{DialogExt as _, MessageDialogKind};
 
 use crate::bridge::{Bridge, BridgeEvent};
 use crate::settings::AppSettings;
-use crate::updater::Updater;
+use crate::updater::{UpdateStatus, Updater};
 
 pub const PRODUCT_NAME: &str = "rekordbox Now Playing for VRChat";
 pub const MAIN_WINDOW: &str = "main";
 pub const SETTINGS_WINDOW: &str = "settings";
+pub const ABOUT_WINDOW: &str = "about";
+/// メイン画面を親にして開く子ウィンドウ。開いている間はメイン画面を操作できない。
+const CHILD_WINDOWS: [&str; 2] = [SETTINGS_WINDOW, ABOUT_WINDOW];
 const TRAY_ID: &str = "main";
+
+// メニューの項目の ID。メニューのイベントは、トレイの分も含めて `handle_menu_event` にすべて届く。
+const MENU_SHOW: &str = "show";
+const MENU_QUIT: &str = "quit";
+const MENU_SETTINGS: &str = "menu-settings";
+const MENU_ABOUT: &str = "menu-about";
 
 const STATUS_STOPPED: &str = "停止中";
 const STATUS_CONNECTING: &str = "接続中…";
@@ -30,12 +40,20 @@ pub fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MainState {
-    pub version: String,
     pub running: bool,
     pub status: String,
     pub track: String,
     pub last_sent: String,
     pub update_version: Option<String>,
+}
+
+/// 「このソフトについて」に出す内容。変わるたびに全体を `about-state` で送る。
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AboutState {
+    pub product_name: String,
+    pub version: String,
+    pub update: UpdateStatus,
 }
 
 struct View {
@@ -83,7 +101,6 @@ pub fn main_state(app: &AppHandle) -> MainState {
     let state = app.state::<AppState>();
     let view = lock(&state.view);
     MainState {
-        version: format!("v{}", app.package_info().version),
         running: view.bridge.is_some(),
         status: view.status.clone(),
         track: view.track.clone(),
@@ -92,8 +109,19 @@ pub fn main_state(app: &AppHandle) -> MainState {
     }
 }
 
+pub fn about_state(app: &AppHandle) -> AboutState {
+    AboutState {
+        product_name: PRODUCT_NAME.into(),
+        version: format!("v{}", app.package_info().version),
+        update: app.state::<AppState>().updater.status(),
+    }
+}
+
 pub fn refresh_ui(app: &AppHandle) {
     let _ = app.emit_to(MAIN_WINDOW, "main-state", main_state(app));
+    if app.get_webview_window(ABOUT_WINDOW).is_some() {
+        let _ = app.emit_to(ABOUT_WINDOW, "about-state", about_state(app));
+    }
 }
 
 fn now_hms() -> String {
@@ -194,14 +222,18 @@ pub fn test_send(app: &AppHandle, message: &str) -> Result<String, String> {
     Ok(line)
 }
 
-/// 起動後に一度、更新を確認する。取得できたら画面に知らせる。
-pub fn check_update_in_background(app: &AppHandle) {
-    let handle = app.clone();
+/// 更新を確認する（起動時と、「このソフトについて」の［更新を確認］）。
+/// 確認中・取得済み・未インストールのときは何もしない。結果は画面に知らせる。
+pub fn check_update(app: &AppHandle) {
     let updater = app.state::<AppState>().updater.clone();
+    if !updater.try_begin_check() {
+        return;
+    }
+    refresh_ui(app);
+    let handle = app.clone();
     std::thread::spawn(move || {
-        if updater.check_and_download().is_some()
-            && !handle.state::<AppState>().exiting.load(Ordering::SeqCst)
-        {
+        updater.check_and_download();
+        if !handle.state::<AppState>().exiting.load(Ordering::SeqCst) {
             refresh_ui(&handle);
         }
     });
@@ -239,36 +271,65 @@ pub fn show_main_window(app: &AppHandle) {
         let _ = window.unminimize();
         let _ = window.set_focus();
     }
-    // 設定画面が開いていれば、そちらを前に出す。
-    if let Some(settings) = app.get_webview_window(SETTINGS_WINDOW) {
-        let _ = settings.set_focus();
+    // 設定画面などが開いていれば、そちらを前に出す。
+    for label in CHILD_WINDOWS {
+        if let Some(child) = app.get_webview_window(label) {
+            let _ = child.set_focus();
+        }
     }
 }
 
 /// 設定画面を開く。開いている間はメイン画面を操作できないようにする。
 pub fn open_settings(app: &AppHandle) -> Result<(), String> {
-    if let Some(window) = app.get_webview_window(SETTINGS_WINDOW) {
+    open_child_window(
+        app,
+        SETTINGS_WINDOW,
+        "settings.html",
+        format!("設定 — {PRODUCT_NAME}"),
+        (580.0, 720.0),
+    )
+    .map_err(|e| format!("設定画面を開けません: {e}"))
+}
+
+/// 「このソフトについて」を開く。開いている間はメイン画面を操作できないようにする。
+pub fn open_about(app: &AppHandle) -> Result<(), String> {
+    open_child_window(
+        app,
+        ABOUT_WINDOW,
+        "about.html",
+        format!("このソフトについて — {PRODUCT_NAME}"),
+        (380.0, 160.0),
+    )
+    .map_err(|e| format!("「このソフトについて」を開けません: {e}"))
+}
+
+/// メイン画面を親にした子ウィンドウを開く。既に開いていれば前に出す。
+/// 開いている間はメイン画面を無効にし、閉じたら戻す。
+fn open_child_window(
+    app: &AppHandle,
+    label: &str,
+    url: &str,
+    title: String,
+    (width, height): (f64, f64),
+) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window(label) {
         let _ = window.set_focus();
         return Ok(());
     }
     let main = app
         .get_webview_window(MAIN_WINDOW)
         .ok_or("メイン画面がありません。")?;
-    let window = WebviewWindowBuilder::new(
-        app,
-        SETTINGS_WINDOW,
-        WebviewUrl::App("settings.html".into()),
-    )
-    .title(format!("設定 — {PRODUCT_NAME}"))
-    .inner_size(580.0, 720.0)
-    .resizable(false)
-    .maximizable(false)
-    .minimizable(false)
-    .parent(&main)
-    .map_err(|e| format!("設定画面を開けません: {e}"))?
-    .center()
-    .build()
-    .map_err(|e| format!("設定画面を開けません: {e}"))?;
+    let window = WebviewWindowBuilder::new(app, label, WebviewUrl::App(url.into()))
+        .title(title)
+        .inner_size(width, height)
+        .resizable(false)
+        .maximizable(false)
+        .minimizable(false)
+        .parent(&main)
+        .map_err(|e| e.to_string())?
+        .center()
+        .build()
+        .map_err(|e| e.to_string())?;
     let _ = main.set_enabled(false);
     let handle = app.clone();
     window.on_window_event(move |event| {
@@ -288,20 +349,60 @@ pub fn close_settings(app: &AppHandle) {
     }
 }
 
+/// メイン画面の ☰ メニューを、ウィンドウの左上からの位置（論理座標）に開く。
+pub fn show_main_menu(app: &AppHandle, x: f64, y: f64) -> Result<(), String> {
+    let main = app
+        .get_webview_window(MAIN_WINDOW)
+        .ok_or("メイン画面がありません。")?;
+    let build = || -> tauri::Result<Menu<tauri::Wry>> {
+        let settings = MenuItem::with_id(app, MENU_SETTINGS, "設定...", true, None::<&str>)?;
+        let about =
+            MenuItem::with_id(app, MENU_ABOUT, "このソフトについて...", true, None::<&str>)?;
+        Menu::with_items(app, &[&settings, &about])
+    };
+    let menu = build().map_err(|e| e.to_string())?;
+    main.popup_menu_at(&menu, LogicalPosition::new(x, y))
+        .map_err(|e| e.to_string())
+}
+
+/// メニュー（☰ とトレイ）で選ばれた項目を処理する。アプリに 1 つだけ登録する。
+pub fn handle_menu_event(app: &AppHandle, event: MenuEvent) {
+    match event.id().as_ref() {
+        MENU_SHOW => show_main_window(app),
+        MENU_QUIT => exit_app(app),
+        // ウィンドウはメインスレッドのハンドラの中で作ると固まることがあるので、別のタスクで開く。
+        MENU_SETTINGS => spawn_open(app, open_settings),
+        MENU_ABOUT => spawn_open(app, open_about),
+        _ => {}
+    }
+}
+
+fn spawn_open(app: &AppHandle, open: fn(&AppHandle) -> Result<(), String>) {
+    let handle = app.clone();
+    tauri::async_runtime::spawn(async move {
+        if let Err(e) = open(&handle) {
+            let mut dialog = handle
+                .dialog()
+                .message(e)
+                .title(PRODUCT_NAME)
+                .kind(MessageDialogKind::Warning);
+            if let Some(main) = handle.get_webview_window(MAIN_WINDOW) {
+                dialog = dialog.parent(&main);
+            }
+            dialog.show(|_| {});
+        }
+    });
+}
+
 pub fn build_tray(app: &AppHandle) -> tauri::Result<()> {
-    let show = MenuItem::with_id(app, "show", "ウィンドウを表示", true, None::<&str>)?;
+    let show = MenuItem::with_id(app, MENU_SHOW, "ウィンドウを表示", true, None::<&str>)?;
     let separator = PredefinedMenuItem::separator(app)?;
-    let quit = MenuItem::with_id(app, "quit", "終了", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, MENU_QUIT, "終了", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&show, &separator, &quit])?;
     let mut builder = TrayIconBuilder::with_id(TRAY_ID)
         .tooltip(PRODUCT_NAME)
         .menu(&menu)
         .show_menu_on_left_click(false)
-        .on_menu_event(|app, event| match event.id().as_ref() {
-            "show" => show_main_window(app),
-            "quit" => exit_app(app),
-            _ => {}
-        })
         .on_tray_icon_event(|tray, event| {
             if let TrayIconEvent::DoubleClick {
                 button: MouseButton::Left,
