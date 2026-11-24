@@ -1,6 +1,6 @@
 [package]
 name = "nowplaying-vrc-osc"
-version = "3.0.1-beta"
+version = "3.0.2-beta"
 description = "rekordbox で再生した曲を VRChat の Chatbox へ OSC で送る"
 edition = "2021"
 license = "MIT"

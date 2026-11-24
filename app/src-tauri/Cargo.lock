@@ -2293,7 +2293,7 @@ dependencies = [
 
 [[package]]
 name = "nowplaying-vrc-osc"
-version = "3.0.1-beta"
+version = "3.0.2-beta"
 dependencies = [
  "cc",
  "chrono",

@@ -9,7 +9,7 @@ rekordbox の `master.db` を読み取り専用で直接読む。読めないと
 
 | 構成 | パス | 状態 |
 |---|---|---|
-| アプリ（Tauri v2 / Rust） | `app/` | v3.0.1-beta。主に開発する対象 |
+| アプリ（Tauri v2 / Rust） | `app/` | v3.0.2-beta。主に開発する対象 |
 | 設計メモ | `docs/design.ja.md` | アプリの仕組みと、守ること |
 
 v2（C# / WPF、`gui/`）は v3 で Tauri に移植して削除した。C# 版は Git 履歴に残っている。設定ファイルと `key.dpapi` は C# 版と互換。
