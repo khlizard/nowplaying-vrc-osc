@@ -1,4 +1,4 @@
-rekordbox Now Playing for VRChat
+DJ Now Playing for VRChat
 バージョン {{VERSION}}
 
 ================================================================================
@@ -7,9 +7,12 @@ rekordbox Now Playing for VRChat
 
 rekordbox で再生した曲の情報を、VRChat の Chatbox へ OSC で送る
 非公式ツールです。rekordbox のデータベース（master.db）を読み取り専用で
-直接読みます。Now Playing App は不要です（v2 から）。
+直接読みます。
+rekordbox を直接読めないときは、Now Playing App 2 が取得した曲を送ります。
+Serato や Traktor など、rekordbox 以外の DJ ソフトでも使えます。
 
-  ※ rekordbox（AlphaTheta）および VRChat の公式ツールではありません。
+  ※ rekordbox（AlphaTheta）、Now Playing App（Triode）、VRChat の
+     公式ツールではありません。
   ※ master.db には書き込みません。
   ※ 自己責任でご利用ください。
 
@@ -21,7 +24,7 @@ rekordbox で再生した曲の情報を、VRChat の Chatbox へ OSC で送る
   WebView2: Microsoft Edge WebView2 ランタイム（Windows 11 は標準搭載。
             Windows 10 で起動しないときは Microsoft のサイトから入れてください。
             インストーラー版は、無ければ自動で入れます）
-  その他  : rekordbox 7、VRChat（OSC 有効）
+  その他  : rekordbox 7 または Now Playing App 2、VRChat（OSC 有効）
   通信    : 復号キーの自動取得（GitHub）と、Spotify 曲の曲名取得で
             インターネットを使います。
             インストーラー版は、起動時と［更新を確認］を押したときに、
@@ -32,6 +35,7 @@ rekordbox で再生した曲の情報を、VRChat の Chatbox へ OSC で送る
 ================================================================================
 
   1. rekordbox 7
+     rekordbox 以外の DJ ソフトで使うときは、Now Playing App 2 が必要です。
 
   2. VRChat
      アクションメニュー → Osc → Enabled をオンにしてください。
@@ -55,6 +59,12 @@ rekordbox で再生した曲の情報を、VRChat の Chatbox へ OSC で送る
 
      Spotify の曲は、曲名だけを Spotify から取得して送信します
      （アーティストは送信しません）。
+
+     rekordbox を直接読めないとき（起動していない、復号キーを取得
+     できない、など）は、Now Playing App 2 が取得した曲を送信します。
+     状態欄に「Now Playing App から取得しています」と出ます。
+     切り替えた時点で再生中の曲は送信しません。rekordbox を読める
+     ようになったら rekordbox に戻ります。
 
   5. ［テスト送信］で VRChat への疎通を確認できます。
 
@@ -91,6 +101,9 @@ rekordbox で再生した曲の情報を、VRChat の Chatbox へ OSC で送る
 
   主な設定:
     - master.db の場所（空欄なら自動検出）
+    - rekordbox を読めないときに Now Playing App から取得するか（既定はオン）
+      と、Now Playing App の config.json の場所（空欄なら
+      %USERPROFILE%\.nowplaying\config.json）
     - 復号キー（自動取得できないときだけ入力）
     - VRChat OSC 送信先（既定: 127.0.0.1:9000）
     - Chatbox メッセージ: ヘッダ、区切り文字、表示項目（曲名・アーティスト等）
@@ -99,6 +112,9 @@ rekordbox で再生した曲の情報を、VRChat の Chatbox へ OSC で送る
   Windows の機能（DPAPI）で暗号化して次に保存します:
 
     %AppData%\NowPlayingVrcOsc\key.dpapi
+
+  Now Playing App の config.json は読むだけです。再生中の曲（currentTrack）
+  のほかは読みません。
 
   ZIP 版の使用をやめるときは、アプリのフォルダと一緒に
   %AppData%\NowPlayingVrcOsc フォルダも削除してください。
@@ -126,8 +142,11 @@ rekordbox で再生した曲の情報を、VRChat の Chatbox へ OSC で送る
 
   症状                    確認すること
   --------------------------------------------------------------------------
-  「rekordbox の起動を    rekordbox を起動してください
-   待っています」
+  「rekordbox の起動を    rekordbox を起動してください。rekordbox 以外の
+   待っています」         DJ ソフトなら、Now Playing App 2 を起動してください
+  「Now Playing App から  Now Playing App が曲を取得しているか。切り替えた
+   取得しています」なのに 時点の曲は送信しません
+   送信されない
   曲が送信されない        再生時間設定の秒数より長く再生したか。
                           rekordbox の履歴に曲が記録されているか
   「復号キーを取得        インターネット接続を確認するか、☰ →［設定...］

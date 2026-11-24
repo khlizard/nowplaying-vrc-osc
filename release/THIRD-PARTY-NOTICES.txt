@@ -1,5 +1,5 @@
 THIRD-PARTY NOTICES
-rekordbox Now Playing for VRChat
+DJ Now Playing for VRChat
 
 This application is licensed under the MIT License.
 See LICENCE.txt in the distribution package for the full text.

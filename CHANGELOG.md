@@ -1,6 +1,12 @@
 # 変更履歴
 
-GUI 版（rekordbox Now Playing for VRChat）の変更点です。インストーラー版の更新の説明にも、この節を使います。
+GUI 版（DJ Now Playing for VRChat）の変更点です。インストーラー版の更新の説明にも、この節を使います。
+
+## 未リリース
+
+- rekordbox を直接読めないとき（起動していない、復号キーを取得できない、など）は、Now Playing App 2 が取得した曲を送るようにしました。Serato や Traktor など、rekordbox 以外の DJ ソフトでも使えます。
+- 設定画面に「rekordbox を読めないときは Now Playing App から取得する」（既定はオン）と、Now Playing App の `config.json` の場所を加えました。
+- アプリ名を「DJ Now Playing for VRChat」に戻しました。
 
 ## 3.0.1-beta
 

@@ -1,17 +1,18 @@
-# rekordbox Now Playing for VRChat
+# DJ Now Playing for VRChat
 
 rekordbox で再生した曲を、VRChat の Chatbox に `🎵 Title - Artist` の形で表示する Windows アプリです。
-rekordbox のデータベース（`master.db`）を読み取り専用で直接読み、OSC で VRChat に送ります。画面は日本語です。
+rekordbox のデータベース（`master.db`）を読み取り専用で直接読み、OSC で VRChat に送ります。
+rekordbox を直接読めないときは、[Now Playing App 2](https://nowplayingapp.com) が取得した曲を送ります。Serato や Traktor など、rekordbox 以外の DJ ソフトでも使えます。画面は日本語です。
 
-![メイン画面（状態・現在の曲・最終送信と、開始・停止・テスト送信のボタン、右上のメニュー）、このソフトについて（バージョンと更新の確認）、設定画面（master.db の場所、送信先、Chatbox メッセージの項目とプレビュー）](docs/images/screenshot.png)
+![メイン画面（状態・現在の曲・最終送信と、開始・停止・テスト送信のボタン、右上のメニュー）、このソフトについて（バージョンと更新の確認）、設定画面（master.db の場所、Now Playing App から取得するかとその場所、送信先、Chatbox メッセージの項目とプレビュー）](docs/images/screenshot.png)
 
-> rekordbox（AlphaTheta）、VRChat、Spotify の公式ツールではありません。自己責任でご利用ください。
+> rekordbox（AlphaTheta）、Now Playing App（Triode）、VRChat、Spotify の公式ツールではありません。自己責任でご利用ください。
 > 趣味で作っています。要望に応えられるとは限りません。不具合は [Issues](https://github.com/khlizard/nowplaying-vrc-osc/issues) で知らせてください。
 
 ## 必要なもの
 
 - Windows 10 / 11（64bit）
-- rekordbox 7
+- rekordbox 7、または Now Playing App 2（rekordbox 以外の DJ ソフトで使うとき）
 - VRChat（OSC を有効にしておく）
 - Microsoft Edge WebView2 ランタイム（Windows 11 は標準搭載。インストーラー版は、無ければ自動で入れます）
 
@@ -40,6 +41,15 @@ rekordbox のデータベース（`master.db`）を読み取り専用で直接�
 - 多重起動はできません。2 つ目を起動すると、起動中のウィンドウが前に出ます。
 - 右上の **☰** から、設定と「このソフトについて」（バージョンの確認と更新の確認）を開けます。
 
+### Now Playing App から取得する
+
+rekordbox を直接読めないとき（起動していない、`master.db` が無い、復号キーを取得できない、など）は、Now Playing App 2 が取得した曲を送ります。状態欄には「Now Playing App から取得しています」と出ます。
+
+- Now Playing App の `config.json`（既定は `%USERPROFILE%\.nowplaying\config.json`）から、再生中の曲を読みます。Now Playing App が曲を切り替えたときに送ります。
+- 切り替えた時点で再生中の曲は送りません。
+- rekordbox を読めるようになったら、rekordbox に戻ります。
+- 設定で取得しないようにもできます。
+
 ### Spotify の曲
 
 rekordbox 上の Spotify の曲は、曲名が暗号化されています。
@@ -50,6 +60,7 @@ rekordbox 上の Spotify の曲は、曲名が暗号化されています。
 **☰ →［設定...］** で次の項目を変えられます。
 
 - `master.db` の場所（空欄なら自動で探します）
+- rekordbox を読めないときに Now Playing App から取得するか（既定はオン）と、`config.json` の場所（空欄なら `%USERPROFILE%\.nowplaying\config.json`）
 - 復号キー（自動で取得できないときだけ入力します）
 - 確認の間隔、OSC の送信先（既定 `127.0.0.1:9000`）、通知音、入力中インジケーター
 - Chatbox の文面: ヘッダ、区切り文字、表示する項目（曲名・アーティスト・アルバム・レーベル・コメント）、曲名の `[～]` を除くか
@@ -59,6 +70,7 @@ rekordbox 上の Spotify の曲は、曲名が暗号化されています。
 ## 通信とデータの扱い
 
 - `master.db` には書き込みません。
+- Now Playing App の `config.json` は読むだけです。再生中の曲（`currentTrack`）のほかは読みません。
 - `master.db` の復号キーは、公開されている情報から自動で取得します（GitHub への通信があります）。取得したキーは Windows の DPAPI で暗号化して `%AppData%\NowPlayingVrcOsc\key.dpapi` に保存します。
 - Spotify の曲名を取得するときは、Spotify にトラック ID を送ります。
 - インストーラー版は、起動時と、「このソフトについて」で［更新を確認］を押したときに、GitHub Releases で新しい版を確認します。
@@ -68,7 +80,8 @@ rekordbox 上の Spotify の曲は、曲名が暗号化されています。
 
 | 状態欄の表示・症状 | 確認すること |
 |---|---|
-| 「rekordbox の起動を待っています」 | rekordbox を起動する |
+| 「rekordbox の起動を待っています」 | rekordbox を起動する。rekordbox 以外の DJ ソフトなら、Now Playing App 2 を起動する |
+| 「Now Playing App から取得しています」なのに送られない | Now Playing App が曲を取得しているか。切り替えた時点の曲は送らない |
 | 「master.db が見つかりません」 | ☰ →［設定...］で `master.db` の場所を指定する |
 | 「復号キーを取得できません」 | インターネット接続を確認する。または ☰ →［設定...］の「復号キー」に入力する |
 | 「曲名を取得できませんでした（Spotify）」 | Spotify から曲名を取得できなかった。その曲は送らない |

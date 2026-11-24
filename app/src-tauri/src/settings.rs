@@ -17,6 +17,10 @@ fn is_false(v: &bool) -> bool {
 pub struct AppSettings {
     /// rekordbox master.db のパス。空のときは自動検出。
     pub db_path_override: String,
+    /// rekordbox を直接読めないときに Now Playing App から取得するか。
+    pub now_playing_app_enabled: bool,
+    /// Now Playing App の config.json のパス。空のときは %USERPROFILE%\.nowplaying\config.json。
+    pub now_playing_app_config_path: String,
     pub poll_interval_seconds: f64,
     pub vrc_host: String,
     pub vrc_port: i32,
@@ -39,6 +43,8 @@ impl Default for AppSettings {
     fn default() -> Self {
         Self {
             db_path_override: String::new(),
+            now_playing_app_enabled: true,
+            now_playing_app_config_path: String::new(),
             poll_interval_seconds: 1.0,
             vrc_host: "127.0.0.1".to_string(),
             vrc_port: 9000,
@@ -150,6 +156,8 @@ mod tests {
     fn 既定値() {
         let s = AppSettings::default();
         assert_eq!(s.db_path_override, "");
+        assert!(s.now_playing_app_enabled);
+        assert_eq!(s.now_playing_app_config_path, "");
         assert_eq!(s.poll_interval_seconds, 1.0);
         assert_eq!(s.vrc_host, "127.0.0.1");
         assert_eq!(s.vrc_port, 9000);
@@ -188,6 +196,9 @@ mod tests {
         );
         let s = AppSettings::load_from(&p);
         assert_eq!(s.db_path_override, "C:/x/master.db");
+        // v2 には無いキー。既定値で読む。
+        assert!(s.now_playing_app_enabled);
+        assert_eq!(s.now_playing_app_config_path, "");
         assert_eq!(s.poll_interval_seconds, 2.5);
         assert_eq!(s.vrc_host, "localhost");
         assert_eq!(s.vrc_port, 9100);

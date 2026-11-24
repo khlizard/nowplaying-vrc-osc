@@ -1,4 +1,4 @@
-//! 監視のスレッド。rekordbox の履歴をポーリングし、新しい曲を VRChat の Chatbox へ送る（C# の BridgeService）。
+//! 監視のスレッド。rekordbox の履歴（読めなければ Now Playing App）をポーリングし、新しい曲を VRChat の Chatbox へ送る（C# の BridgeService）。
 //! Tauri には依存しない。画面への知らせは `BridgeEvent` で呼び出し側に渡す。
 
 use std::io;
@@ -11,8 +11,9 @@ use std::time::{Duration, Instant};
 use crate::dedup::TrackDeduplicator;
 use crate::format::{format_chatbox_message, format_track_body};
 use crate::osc::VrcChatboxSender;
-use crate::rekordbox::source::{RekordboxTrackSource, SourceEvent, MIN_INTERVAL_SECONDS};
+use crate::rekordbox::source::{SourceEvent, MIN_INTERVAL_SECONDS};
 use crate::settings::AppSettings;
+use crate::track_source::TrackSource;
 
 pub enum BridgeEvent {
     /// 状態欄の文言。
@@ -43,7 +44,7 @@ impl Bridge {
             settings.chatbox_notification,
             settings.chatbox_indicator,
         )?;
-        let source = RekordboxTrackSource::from_settings(&settings);
+        let source = TrackSource::from_settings(&settings);
         let stop = Arc::new(AtomicBool::new(false));
         let thread_stop = stop.clone();
         thread::Builder::new()
@@ -68,13 +69,13 @@ impl Drop for Bridge {
 fn run(
     settings: AppSettings,
     sender: VrcChatboxSender,
-    mut source: RekordboxTrackSource,
+    mut source: TrackSource,
     stop: &AtomicBool,
     on_event: &dyn Fn(BridgeEvent),
 ) {
     let format = settings.to_message_format();
     let mut dedup = TrackDeduplicator::new();
-    // rekordbox のソースは起動時点の曲を知らせないので、最初に知らされた曲からそのまま送る。
+    // ソースは起動時点の曲を知らせないので（rekordbox も Now Playing App も）、最初に知らされた曲からそのまま送る。
     dedup.seed(None);
 
     let mut handle = |event: SourceEvent| match event {

@@ -1,4 +1,4 @@
-# rekordbox Now Playing for VRChat — 設計メモ（v3）
+# DJ Now Playing for VRChat — 設計メモ（v3）
 
 アプリの仕組みと、変更するときに守ることをまとめた開発者向けの文書です。
 使い方は [`README.md`](../README.md)、ビルドと配布は [`app/README.md`](../app/README.md) を参照してください。
@@ -6,7 +6,8 @@
 ## 目的
 
 rekordbox で再生した曲を、VRChat の Chatbox へ OSC で送ります。
-rekordbox の `master.db` を読み取り専用で直接読むので、ほかのアプリは要りません。
+rekordbox の `master.db` を読み取り専用で直接読むので、rekordbox ならほかのアプリは要りません。
+rekordbox を直接読めないときは、Now Playing App 2 の `config.json` から再生中の曲を読みます（rekordbox 以外の DJ ソフトにも使える予備）。
 
 ## 構成
 
@@ -35,7 +36,22 @@ OSC の送信は自前で実装しています（`osc.rs`）。
 
 ## 処理の流れ
 
-`bridge.rs` のスレッドが、確認の間隔ごとに `rekordbox/source.rs` の `RekordboxTrackSource::tick` を呼びます。受け取った曲は、重複を除いてから整形して送ります。
+`bridge.rs` のスレッドが、確認の間隔ごとに `track_source.rs` の `TrackSource::tick` を呼びます。受け取った曲は、重複を除いてから整形して送ります。
+
+### 取得元を選ぶ（`track_source.rs`）
+
+- 毎回まず rekordbox を確かめます（`RekordboxTrackSource::tick`）。読めている、または一時的なエラー（DB を使用中、`SQLITE_NOTADB` が上限未満）なら rekordbox を使います（`is_readable`）。一瞬の使用中で取得元が行ったり来たりしないようにするためです。
+- rekordbox を読めず（未起動、`master.db` が無い、キーが無い、DB の構成が違うなど）、設定 `NowPlayingAppEnabled` がオンで、Now Playing App の `config.json` があるときは、Now Playing App を使います。このあいだ rekordbox の状態の知らせは捨て、状態欄には「Now Playing App から取得しています」を出します。
+- Now Playing App に切り替えたときは、その時点の曲を基準にするだけで送りません。rekordbox に戻ったときは、rekordbox の今の状態を出し直します。rekordbox 側は再接続後の最初の読み取りで基準を取るので、こちらも今の曲は送りません。
+
+### Now Playing App（`nowplaying_app.rs`）
+
+- 場所は設定の `NowPlayingAppConfigPath`、空なら `%USERPROFILE%\.nowplaying\config.json` です。
+- 更新時刻とサイズが前回と同じなら読みません。読むのは `currentTrack`（id、title、artist、album、label、comment）だけです。title が空なら曲なしとして扱います。
+- JSON が壊れている（書き込み途中）ときは黙って次の確認で読み直します。
+- 曲が変わったかは `TrackDeduplicator` で判定します（id、無ければ曲名）。
+
+### rekordbox（`rekordbox/source.rs`）
 
 1. **DB の場所を決める**（`rekordbox/paths.rs`）
    1. 設定の `DbPathOverride`
@@ -89,11 +105,12 @@ OSC の送信は自前で実装しています（`osc.rs`）。
 
 `%AppData%\NowPlayingVrcOsc\settings.json` に保存します。v2 と同じ場所・同じキー名（PascalCase）なので、v2 の設定をそのまま読めます。項目と既定値は `settings.rs` の `AppSettings` を参照してください。
 読めないときや壊れているときは既定値で起動します。復号キーは `settings.json` には保存しません。
+v3.0.1-beta より後に足したキー（`NowPlayingAppEnabled`、`NowPlayingAppConfigPath`）が無い設定ファイルは、既定値（オン、空）で読みます。C# 版は知らないキーを無視します。
 
 ## 自動更新
 
 - Velopack のインストーラー版でだけ動きます。ZIP 版と `npm run tauri dev` では動きません。
-- packId（`NowPlayingVrcOsc`）、exe 名（`NowPlayingVrcOsc.exe`）、packTitle（`DJ Now Playing for VRChat`）で、インストール済みの版と新しい版を結び付けます。packTitle は旧名のままで、アプリの表示名（`rekordbox Now Playing for VRChat`）とは違います。
+- packId（`NowPlayingVrcOsc`）、exe 名（`NowPlayingVrcOsc.exe`）、packTitle（`DJ Now Playing for VRChat`）で、インストール済みの版と新しい版を結び付けます。
 - 起動時に 1 回と、「このソフトについて」の［更新を確認］を押したときに、GitHub Releases（`khlizard/nowplaying-vrc-osc`、プレリリースを含む）を確認し、新しい版があればダウンロードします。
 - 確認の状態は `updater.rs` の `UpdateStatus` です（`NotInstalled`、`Idle`、`Checking`、`UpToDate`、`Downloaded`、`Failed`）。確認を始められるのは `Idle`、`UpToDate`、`Failed` のときだけで、確認は同時に 1 つしか走りません（`try_begin_check`）。
 - 適用はアプリを終了したとき、またはメイン画面の［更新して再起動］を押したときです。
@@ -114,9 +131,10 @@ OSC の送信は自前で実装しています（`osc.rs`）。
 - `master.db` に書き込まない。書き込みの SQL も、`rekey`・`journal_mode`・`wal_checkpoint` などの PRAGMA も使わない。
 - DB を開くのは `rekordbox/master_db.rs` だけにする。
 - 復号キーをログ、画面、例外メッセージに出さない。
-- 起動時と再接続時に、その時点の曲を送らない。
+- Now Playing App の `config.json` は `currentTrack` 以外を読まない。中身（設定やトークンが入っている）をログ、画面、エラー文に出さない。書き込まない。
+- 起動時と再接続時、取得元を切り替えたときに、その時点の曲を送らない。
 - テストに実際の `master.db` を使わない。テストの中で暗号化した DB を作って使う。
-- テストで実際の `%AppData%\NowPlayingVrcOsc` を読み書きしない。
+- テストで実際の `%AppData%\NowPlayingVrcOsc` と、実際の Now Playing App の `config.json` を読み書きしない。
 - packId、exe 名、packTitle を変えない（インストール済みの版が自動更新されなくなる）。
 - cargo を直接実行しない。`npm run tauri` と `npm run test:rust` を使う（[`app/README.md`](../app/README.md)）。
 

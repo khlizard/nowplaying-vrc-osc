@@ -1,4 +1,4 @@
-# rekordbox Now Playing for VRChat（開発者向け）
+# DJ Now Playing for VRChat（開発者向け）
 
 アプリ本体のソースです。Tauri v2（Rust）で作っています。画面は `ui/`（Vite と TypeScript）、処理は `src-tauri/src/` にあります。
 使い方は [ルートの README](../README.md)、仕組みは [`docs/design.ja.md`](../docs/design.ja.md) を参照してください。

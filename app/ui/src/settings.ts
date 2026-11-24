@@ -1,11 +1,13 @@
 import {
   browseDbPath,
+  browseNpConfigPath,
   closeSettings,
   errorText,
   getKeySaved,
   getSettings,
   previewMessage,
   resolveDbPath,
+  resolveNpConfigPath,
   saveSettings,
   showWarning,
   type AppSettings,
@@ -15,6 +17,10 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 const input = (id: string) => $<HTMLInputElement>(id);
 
 const dbPath = input("db-path");
+const npEnabled = input("np-enabled");
+const npPath = input("np-path");
+const npBrowse = $<HTMLButtonElement>("np-browse");
+const npHint = $("np-hint");
 const poll = input("poll");
 const key = input("key");
 const host = input("host");
@@ -48,8 +54,17 @@ function parseIntLike(s: string): number | null {
   return n >= -2147483648 && n <= 2147483647 ? n : null;
 }
 
+/** Now Playing App の欄は、取得するときだけ編集できる。 */
+function renderNpEnabled() {
+  npPath.disabled = !npEnabled.checked;
+  npBrowse.disabled = !npEnabled.checked;
+}
+
 function loadFields(s: AppSettings) {
   dbPath.value = s.DbPathOverride;
+  npEnabled.checked = s.NowPlayingAppEnabled;
+  npPath.value = s.NowPlayingAppConfigPath;
+  renderNpEnabled();
   poll.value = String(s.PollIntervalSeconds);
   host.value = s.VrcHost;
   port.value = String(s.VrcPort);
@@ -71,6 +86,8 @@ function buildSettings(): AppSettings {
   const pt = parseIntLike(port.value);
   return {
     DbPathOverride: dbPath.value.trim(),
+    NowPlayingAppEnabled: npEnabled.checked,
+    NowPlayingAppConfigPath: npPath.value.trim(),
     PollIntervalSeconds: p !== null && p > 0 ? p : 0.5,
     VrcHost: host.value.trim(),
     VrcPort: pt !== null && pt >= 1 && pt <= 65535 ? pt : 9000,
@@ -101,17 +118,22 @@ async function updatePreview() {
   if (seq === previewSeq) preview.textContent = text;
 }
 
-let hintSeq = 0;
-async function updateHint() {
-  const seq = ++hintSeq;
-  let auto: string;
-  try {
-    auto = await resolveDbPath(dbPath.value.trim());
-  } catch (e) {
-    auto = errorText(e);
-  }
-  if (seq === hintSeq) dbHint.textContent = `空欄なら自動検出: ${auto}`;
+/** 「空欄なら自動検出: …」のヒント。古い応答で新しい表示を上書きしないよう連番で管理する。 */
+function hintUpdater(field: HTMLInputElement, hint: HTMLElement, resolve: (p: string) => Promise<string>) {
+  let seq = 0;
+  return async () => {
+    const mine = ++seq;
+    let auto: string;
+    try {
+      auto = await resolve(field.value.trim());
+    } catch (e) {
+      auto = errorText(e);
+    }
+    if (mine === seq) hint.textContent = `空欄なら自動検出: ${auto}`;
+  };
 }
+const updateHint = hintUpdater(dbPath, dbHint, resolveDbPath);
+const updateNpHint = hintUpdater(npPath, npHint, resolveNpConfigPath);
 
 /** 警告を出してから該当欄にフォーカスする。 */
 async function invalid(message: string, target: HTMLElement) {
@@ -170,7 +192,21 @@ $("browse").addEventListener("click", async () => {
   }
 });
 
+npBrowse.addEventListener("click", async () => {
+  try {
+    const picked = await browseNpConfigPath(npPath.value);
+    if (picked !== null) {
+      npPath.value = picked;
+      void updateNpHint();
+    }
+  } catch (e) {
+    await showWarning(errorText(e)).catch(() => {});
+  }
+});
+
 dbPath.addEventListener("input", () => void updateHint());
+npPath.addEventListener("input", () => void updateNpHint());
+npEnabled.addEventListener("change", renderNpEnabled);
 for (const el of [header, separator, incTitle, incArtist, incAlbum, incLabel, incComment, strip]) {
   el.addEventListener("input", () => void updatePreview());
   el.addEventListener("change", () => void updatePreview());
@@ -179,6 +215,7 @@ for (const el of [header, separator, incTitle, incArtist, incAlbum, incLabel, in
 async function init() {
   loadFields(await getSettings());
   void updateHint();
+  void updateNpHint();
   void updatePreview();
   const saved = await getKeySaved().catch(() => false);
   keyStatus.textContent = saved ? "保存済みのキーがあります" : "未保存（通常は自動取得されます）";

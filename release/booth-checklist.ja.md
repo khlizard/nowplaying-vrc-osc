@@ -13,6 +13,7 @@
 ## 動作確認
 
 - [ ] rekordbox + VRChat で、ローカル曲と Spotify 曲の送信、テスト送信を確認した
+- [ ] rekordbox を閉じて Now Playing App 2 だけで、曲の送信を確認した（切り替えた時点の曲は送られないこと）
 - [ ] アプリ起動時に再生中の曲が送られないことを確認した
 - [ ] rekordbox を終了したあと、`master.db` のフォルダに `-wal` / `-shm` が残っていないことを確認した
 
@@ -37,9 +38,9 @@
 
 ## BOOTH 商品ページ（初回、または内容が変わったとき）
 
-- [ ] 商品名: **rekordbox Now Playing for VRChat**
-- [ ] 非公式ツールである旨の免責（rekordbox / AlphaTheta、VRChat、Spotify）
-- [ ] 動作環境（Windows 10/11 64bit、WebView2 ランタイム、rekordbox 7、VRChat の OSC 有効）
+- [ ] 商品名: **DJ Now Playing for VRChat**
+- [ ] 非公式ツールである旨の免責（rekordbox / AlphaTheta、Now Playing App / Triode、VRChat、Spotify）
+- [ ] 動作環境（Windows 10/11 64bit、WebView2 ランタイム、rekordbox 7 または Now Playing App 2、VRChat の OSC 有効）
 - [ ] 送信が「再生時間設定」の秒数だけ遅れること、Spotify の曲は曲名だけであること
 - [ ] 通信の説明（復号キーの自動取得、Spotify の曲名取得、インストーラー版の更新確認）
 - [ ] 使い方（解凍 → exe 起動 → 開始）と、SmartScreen 警告への対処

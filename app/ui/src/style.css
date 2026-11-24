@@ -57,6 +57,7 @@ input[type="text"], input[type="password"] {
   border: 1px solid var(--border);
   border-radius: 3px;
 }
+input[type="text"]:disabled { background: var(--bg); color: var(--btn-disabled-fg); }
 input[type="checkbox"] { accent-color: var(--accent); margin: 0 6px 0 0; vertical-align: -2px; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 input:focus-visible { outline-offset: 0; }

@@ -29,6 +29,8 @@ export type AboutState = {
 // Rust の AppSettings をそのまま渡す（キーは PascalCase。v2 の settings.json と同じ形）
 export type AppSettings = {
   DbPathOverride: string;
+  NowPlayingAppEnabled: boolean;
+  NowPlayingAppConfigPath: string;
   PollIntervalSeconds: number;
   VrcHost: string;
   VrcPort: number;
@@ -76,6 +78,10 @@ export const previewMessage = (settings: AppSettings) =>
   invoke<string>("preview_message", { settings });
 export const browseDbPath = (current: string) =>
   invoke<string | null>("browse_db_path", { current });
+export const resolveNpConfigPath = (overridePath: string) =>
+  invoke<string>("resolve_np_config_path", { overridePath });
+export const browseNpConfigPath = (current: string) =>
+  invoke<string | null>("browse_np_config_path", { current });
 export const saveSettings = (settings: AppSettings, key: string) =>
   invoke<SaveResult>("save_settings", { settings, key });
 export const showWarning = (message: string) => invoke<void>("show_warning", { message });

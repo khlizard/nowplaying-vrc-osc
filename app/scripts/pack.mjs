@@ -13,7 +13,6 @@ import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 
 // 変えると、インストール済みの版が自動更新されなくなる。
-// PACK_TITLE は旧名のまま（アプリの表示名 rekordbox Now Playing for VRChat とは違う）。
 const PACK_ID = "NowPlayingVrcOsc";
 const EXE = `${PACK_ID}.exe`;
 const PACK_TITLE = "DJ Now Playing for VRChat";

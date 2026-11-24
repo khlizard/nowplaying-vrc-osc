@@ -8,6 +8,7 @@ use crate::app::{
     self, AboutState, AppState, MainState, MAIN_WINDOW, PRODUCT_NAME, SETTINGS_WINDOW,
 };
 use crate::format::format_chatbox_message;
+use crate::nowplaying_app::resolve_config_path as resolve_np_config_path_core;
 use crate::rekordbox::dpapi::DpapiKeyStore;
 use crate::rekordbox::master_db::{verify_key, KeyCheckResult};
 use crate::rekordbox::paths::resolve_db_path as resolve_db_path_core;
@@ -129,6 +130,37 @@ pub async fn browse_db_path(app: AppHandle, current: String) -> Option<String> {
     }
     // 今の値（空なら自動検出のパス）のフォルダから開く。
     let path = resolve_db_path_core(current.trim());
+    if let Some(dir) = path.parent().filter(|d| d.is_dir()) {
+        dialog = dialog.set_directory(dir);
+    }
+    if let Some(name) = path.file_name() {
+        dialog = dialog.set_file_name(name.to_string_lossy());
+    }
+    let picked = dialog.blocking_pick_file()?;
+    picked.into_path().ok().map(|p| p.display().to_string())
+}
+
+#[tauri::command]
+pub fn resolve_np_config_path(override_path: String) -> String {
+    resolve_np_config_path_core(&override_path)
+        .display()
+        .to_string()
+}
+
+/// Now Playing App の config.json を選ぶ。
+#[tauri::command]
+pub async fn browse_np_config_path(app: AppHandle, current: String) -> Option<String> {
+    let mut dialog = app
+        .dialog()
+        .file()
+        .set_title("Now Playing App の config.json を選択")
+        .add_filter("Now Playing App の設定 (*.json)", &["json"])
+        .add_filter("すべてのファイル", &["*"]);
+    if let Some(window) = app.get_webview_window(SETTINGS_WINDOW) {
+        dialog = dialog.set_parent(&window);
+    }
+    // 今の値（空なら既定の場所）のフォルダから開く。
+    let path = resolve_np_config_path_core(&current);
     if let Some(dir) = path.parent().filter(|d| d.is_dir()) {
         dialog = dialog.set_directory(dir);
     }

@@ -4,8 +4,8 @@
 
 ## プロジェクト概要
 
-**rekordbox Now Playing for VRChat**: rekordbox で再生した曲を、VRChat の Chatbox へ OSC で送る Windows アプリ。
-rekordbox の `master.db` を読み取り専用で直接読む。
+**DJ Now Playing for VRChat**: rekordbox で再生した曲を、VRChat の Chatbox へ OSC で送る Windows アプリ。
+rekordbox の `master.db` を読み取り専用で直接読む。読めないときは Now Playing App 2 の `config.json`（`currentTrack`）から読む。
 
 | 構成 | パス | 状態 |
 |---|---|---|
@@ -47,12 +47,12 @@ v2（C# / WPF、`gui/`）は v3 で Tauri に移植して削除した。C# 版�
 詳しくは `docs/design.ja.md` の「変更するときに守ること」。
 
 1. `master.db` に書き込まない。書き込みの SQL や、`rekey`・`journal_mode`・`wal_checkpoint` などの PRAGMA を使わない。DB を開くのは `rekordbox/master_db.rs` だけ。
-2. 起動時と再接続時に、その時点の曲を送らない。
+2. 起動時と再接続時、取得元（rekordbox / Now Playing App）を切り替えたときに、その時点の曲を送らない。
 3. 重複抑制は ContentID（`TrackInfo.id`）優先、無ければ曲名。
 4. 既定のメッセージは `🎵 Title - Artist`（ヘッダ `🎵`、区切り `-`、項目は title と artist）。曲名内の `[～]` は既定で除く。
 5. OSC は `/chatbox/input [text, true, notification]`。インジケーターは `/chatbox/typing`。
-6. 復号キーをログ、画面、エラーメッセージに出さない。`settings.json` に保存しない。
-7. テストに実際の `master.db` を使わない。テストで実際の `%APPDATA%\NowPlayingVrcOsc` を読み書きしない。
+6. 復号キーをログ、画面、エラーメッセージに出さない。`settings.json` に保存しない。Now Playing App の `config.json` は `currentTrack` 以外を読まず、中身を出さず、書き込まない（設定やトークンが入っている）。
+7. テストに実際の `master.db` を使わない。テストで実際の `%APPDATA%\NowPlayingVrcOsc` と、実際の Now Playing App の `config.json` を読み書きしない。
 8. 新しい外部通信を足したら、README.md、docs/design.ja.md、release/README.ja.txt の通信の説明も直す。
 9. Velopack の packId `NowPlayingVrcOsc`、exe 名 `NowPlayingVrcOsc.exe`、packTitle `DJ Now Playing for VRChat` を変えない（インストール済みの版が自動更新されなくなる）。
 

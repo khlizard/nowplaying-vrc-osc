@@ -4,11 +4,13 @@ mod commands;
 pub mod dedup;
 pub mod format;
 pub mod http;
+pub mod nowplaying_app;
 pub mod osc;
 pub mod rekordbox;
 pub mod settings;
 pub mod spotify;
 pub mod track;
+pub mod track_source;
 mod updater;
 
 use tauri::{Manager, WindowEvent};
@@ -66,6 +68,8 @@ pub fn run() {
             commands::resolve_db_path,
             commands::preview_message,
             commands::browse_db_path,
+            commands::resolve_np_config_path,
+            commands::browse_np_config_path,
             commands::save_settings,
             commands::show_warning,
             commands::close_settings,

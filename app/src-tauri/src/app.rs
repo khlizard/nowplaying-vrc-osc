@@ -13,7 +13,7 @@ use crate::bridge::{Bridge, BridgeEvent};
 use crate::settings::AppSettings;
 use crate::updater::{UpdateStatus, Updater};
 
-pub const PRODUCT_NAME: &str = "rekordbox Now Playing for VRChat";
+pub const PRODUCT_NAME: &str = "DJ Now Playing for VRChat";
 pub const MAIN_WINDOW: &str = "main";
 pub const SETTINGS_WINDOW: &str = "settings";
 pub const ABOUT_WINDOW: &str = "about";
@@ -286,7 +286,7 @@ pub fn open_settings(app: &AppHandle) -> Result<(), String> {
         SETTINGS_WINDOW,
         "settings.html",
         format!("設定 — {PRODUCT_NAME}"),
-        (580.0, 720.0),
+        (580.0, 820.0),
     )
     .map_err(|e| format!("設定画面を開けません: {e}"))
 }

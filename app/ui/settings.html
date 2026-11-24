@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>設定 — rekordbox Now Playing for VRChat</title>
+    <title>設定 — DJ Now Playing for VRChat</title>
     <link rel="stylesheet" href="./src/style.css" />
     <script type="module" src="./src/settings.ts"></script>
   </head>
@@ -16,6 +16,17 @@
       </div>
       <div></div>
       <div id="db-hint" class="note hint"></div>
+
+      <div></div>
+      <label class="check"><input id="np-enabled" type="checkbox" />rekordbox を読めないときは Now Playing App から取得する</label>
+
+      <label for="np-path" class="row-label">Now Playing App</label>
+      <div class="cell with-button">
+        <input id="np-path" type="text" spellcheck="false" />
+        <button id="np-browse" type="button" class="small">参照...</button>
+      </div>
+      <div></div>
+      <div id="np-hint" class="note hint"></div>
 
       <label for="poll" class="row-label">ポーリング間隔（秒）</label>
       <div class="cell"><input id="poll" type="text" class="w120" /></div>

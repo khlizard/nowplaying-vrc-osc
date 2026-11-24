@@ -46,6 +46,8 @@ pub struct RekordboxTrackSource {
     key: Option<String>,
     last_signature: Option<String>,
     connected: bool,
+    /// 一時的なエラー（DB を使用中など）で読めなかった。すぐ読めるようになる見込みがある。
+    transient: bool,
     not_a_db_count: u32,
     last_state: Option<String>,
 }
@@ -64,9 +66,21 @@ impl RekordboxTrackSource {
             key: None,
             last_signature: None,
             connected: false,
+            transient: false,
             not_a_db_count: 0,
             last_state: None,
         }
+    }
+
+    /// 読めている、または一時的なエラーですぐ読めそうか。
+    /// false のときは Now Playing App に切り替えてよい（rekordbox が未起動、キーが無いなど）。
+    pub fn is_readable(&self) -> bool {
+        self.connected || self.transient
+    }
+
+    /// 今の状態の文言（直前に出したもの）。
+    pub fn state(&self) -> Option<&str> {
+        self.last_state.as_deref()
     }
 
     pub fn from_settings(settings: &AppSettings) -> Self {
@@ -81,6 +95,8 @@ impl RekordboxTrackSource {
     /// 1 回分の確認。状態は Status、送る曲は Track で通知する。
     pub fn tick(&mut self, stop: &AtomicBool, emit: &mut dyn FnMut(SourceEvent)) {
         let db_path = (self.get_db_path)();
+        // 一時的なエラーかどうかは、この回の結果で決め直す（handle_db_error で立てる）。
+        self.transient = false;
         let wal = wal_path(&db_path);
 
         if !db_path.is_file() {
@@ -216,10 +232,15 @@ impl RekordboxTrackSource {
                     self.not_a_db_count = 0;
                     self.key = None;
                     self.keys.invalidate();
+                } else {
+                    self.transient = true;
                 }
                 self.set_state(MSG_BAD_KEY, emit);
             }
-            DbErrorKind::Busy => self.set_state(MSG_BUSY, emit),
+            DbErrorKind::Busy => {
+                self.transient = true;
+                self.set_state(MSG_BUSY, emit);
+            }
             DbErrorKind::Other => {
                 self.notify("データベース読み取りエラー (SqliteError)", emit);
             }
